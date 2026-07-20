@@ -60,20 +60,20 @@ changes** — most constraints there exist to avoid a specific known failure mod
 
 ## Stack
 
-Next.js · React · TypeScript · Tailwind · Zustand · PixiJS (planned) ·
+Next.js · React · TypeScript · Tailwind · Zustand · PixiJS ·
 WebCodecs with FFmpeg.wasm fallback (planned) · IndexedDB · Vitest · Playwright
 
 ## Roadmap
 
 - [x] **Phase 1** — Monorepo, design system, docking layout, canvas timeline, media import
-- [ ] **Phase 2** — Preview renderer, playback, undo/redo, project save
+- [ ] **Phase 2** — Preview renderer ✅, playback, undo/redo, project save
 - [ ] **Phase 3** — Animation engine, keyframes, masking
 - [ ] **Phase 4** — Captions via local Whisper
 - [ ] **Phase 5** — Color grading, aspect ratios, effects
 - [ ] **Phase 6** — Export engine, performance, plugin SDK
 
-Phase 1 is complete except for the preview renderer, which is Phase 2's first
-task.
+Phase 1 is complete. The preview renderer (PixiJS) now composites the timeline;
+playback, undo/redo, and project save are next.
 
 **Known gap:** projects are not persisted yet, so imported media is lost on
 reload while its bytes remain in IndexedDB. Project save (Phase 2) lands

@@ -91,13 +91,45 @@ not a side entrance.
 Effects declare their parameters via `EffectParamSchema`, so the properties
 panel builds itself and plugin authors write no UI code.
 
+## The rendering path
+
+`resolveScene(project, frame)` returns a flat, fully-resolved draw list. The
+realtime preview and the headless exporter both consume it, so there is exactly
+one implementation of "what does frame N look like".
+
+Backends decide *how* to draw. **PixiJS (WebGL)** is the preview backend, because
+color grading, blur, and masks are shader problems. React Konva is reserved for
+the mask pen-tool overlay, where vector editing UI is genuinely its strength.
+
+### Rules the Pixi backend must keep
+
+Each of these was a bug before it was a rule:
+
+- **Never let Pixi remove the canvas.** `app.destroy(true, …)` means
+  `removeView: true`, which deletes the element React owns. React then renders
+  into a detached node and the preview silently disappears — StrictMode's
+  double-mount triggers it every time in development. Always
+  `destroy({ removeView: false }, …)`.
+- **Await init before destroy.** Pixi's init is async, React's cleanup is not.
+  Tearing down mid-init leaves a half-built Application holding a WebGL context.
+- **Reconcile display objects by clip id.** Rebuilding the stage per frame
+  thrashes the GPU and discards uploaded textures.
+- **Handle WebGL context loss.** Contexts are taken away by driver resets, power
+  events, and too many live contexts. Without a `webglcontextlost` handler that
+  calls `preventDefault`, the browser never offers a restore and the preview is
+  a blank frame with no explanation.
+
+### Measuring elements for canvas sizing
+
+Use `useElementSize`, never a bare `ResizeObserver`. Child layout effects run
+before their parents', so the first measurement of anything inside `SplitPane`
+is legitimately `0` — and any code gated on `width > 0` would never mount. Some
+embedded WebKit builds also never fire the observer at all.
+
 ## Planned decisions not yet implemented
 
 Recorded here so they are not silently relitigated:
 
-- **PixiJS (WebGL) for the compositor.** Color grading, blur, and masks are
-  shader problems. React Konva is retained only for the mask pen-tool overlay,
-  where vector editing UI is genuinely its strength.
 - **WebCodecs first, FFmpeg.wasm as fallback.** WebCodecs is far faster but does
   not mux and has uneven browser coverage. An `ExportBackend` interface selects
   between `WebCodecsBackend`, `FFmpegWasmBackend`, and an optional `NodeBackend`
@@ -108,7 +140,7 @@ Recorded here so they are not silently relitigated:
 - **Audio clock is the master clock.** Never `requestAnimationFrame`. Video
   chases audio, because drift is audible long before it is visible.
 - **Timeline renders to canvas, not DOM.** DOM timelines degrade badly past
-  roughly 200 clips.
+  roughly 200 clips. *(Implemented.)*
 
 ## Local-first, always
 
