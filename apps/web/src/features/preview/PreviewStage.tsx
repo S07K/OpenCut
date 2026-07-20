@@ -35,6 +35,7 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
 
   const project = useEditorStore((state) => state.project);
   const playhead = useEditorStore((state) => state.playhead);
+  const isPlaying = useEditorStore((state) => state.isPlaying);
 
   /**
    * WebGL contexts can be taken away at any time — a GPU driver reset, too many
@@ -132,8 +133,8 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
     // The one line that makes preview and export structurally identical: both
     // draw whatever `resolveScene` returns for this frame.
     const scene = resolveScene(project, playhead);
-    rendererRef.current?.render(scene, project.entities.media, width);
-  }, [isReady, project, playhead, width, height, textureEpoch]);
+    rendererRef.current?.render(scene, project.entities.media, width, isPlaying);
+  }, [isReady, project, playhead, isPlaying, width, height, textureEpoch]);
 
   return (
     <>

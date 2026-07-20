@@ -8,6 +8,7 @@ import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { useProject } from "@/features/project/ProjectProvider";
+import { usePlayback } from "@/features/playback/usePlayback";
 import { TimelinePanel } from "@/features/timeline/TimelinePanel";
 import { DropOverlay } from "@/features/media/DropOverlay";
 import { MediaImportProvider } from "@/features/media/MediaImportProvider";
@@ -100,5 +101,6 @@ export function EditorShell() {
 function EditorKeyboard() {
   const { saveNow } = useProject();
   useKeyboardShortcuts(() => void saveNow());
+  usePlayback();
   return null;
 }

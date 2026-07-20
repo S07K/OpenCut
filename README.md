@@ -66,14 +66,15 @@ WebCodecs with FFmpeg.wasm fallback (planned) · IndexedDB · Vitest · Playwrig
 ## Roadmap
 
 - [x] **Phase 1** — Monorepo, design system, docking layout, canvas timeline, media import
-- [ ] **Phase 2** — Preview renderer ✅, project save ✅, playback, undo/redo
+- [ ] **Phase 2** — Preview renderer ✅, project save ✅, playback ✅, undo/redo
 - [ ] **Phase 3** — Animation engine, keyframes, masking
 - [ ] **Phase 4** — Captions via local Whisper
 - [ ] **Phase 5** — Color grading, aspect ratios, effects
 - [ ] **Phase 6** — Export engine, performance, plugin SDK
 
-Phase 1 is complete. The preview renderer composites the timeline, and projects
-autosave locally and restore on reload. Playback and undo/redo are next.
+Phase 1 is complete. The preview renderer composites the timeline, projects
+autosave locally and restore on reload, and the transport plays back against an
+audio-clock timebase. Undo/redo is next.
 
 Projects are stored in IndexedDB and can be saved to / opened from `.opencut`
 files — plain JSON you can diff in git or paste into a bug report. Loading is

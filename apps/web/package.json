@@ -13,6 +13,7 @@
   "dependencies": {
     "@opencut/animation-engine": "workspace:*",
     "@opencut/media-engine": "workspace:*",
+    "@opencut/playback-engine": "workspace:*",
     "@opencut/project-io": "workspace:*",
     "@opencut/render-engine": "workspace:*",
     "@opencut/timeline-engine": "workspace:*",

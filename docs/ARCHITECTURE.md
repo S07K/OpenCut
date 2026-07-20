@@ -119,6 +119,34 @@ Each of these was a bug before it was a rule:
   calls `preventDefault`, the browser never offers a restore and the preview is
   a blank frame with no explanation.
 
+## The transport
+
+`AudioContext.currentTime` is the timebase for the entire editor. It is
+monotonic, hardware-backed, and does not stall when the main thread is busy —
+unlike `requestAnimationFrame`, which drops frames under load and would let the
+playhead fall behind the sound. **Audio leads; video chases.**
+
+Two rules make this work:
+
+- **The playhead is derived, never accumulated.** Each tick computes the frame
+  from `(now - startedAt)` against the clock, rather than adding a delta to the
+  previous position. Accumulating keeps every rounding error forever and visibly
+  desyncs after a few minutes; deriving bounds the error to one tick, always.
+  This is also why the transport self-corrects instantly after any stall.
+- **Audio is scheduled ahead on the clock**, not started by a timer, so a clip
+  begins on exactly its frame rather than whenever a callback happened to fire.
+
+`requestAnimationFrame` decides *when to repaint*. It never decides where the
+playhead is. And because rAF does not fire in a hidden tab while scheduled audio
+keeps sounding, the loop falls back to a timer when the document is hidden —
+otherwise a backgrounded timeline would play to the end and never notice it had
+finished.
+
+Video elements are seeked precisely while scrubbing, but during playback they
+run under their own decoder and are only nudged on gross drift. Assigning
+`currentTime` every frame fights the decoder and stutters far worse than the
+drift it corrects.
+
 ### Measuring elements for canvas sizing
 
 Use `useElementSize`, never a bare `ResizeObserver`. Child layout effects run
@@ -137,8 +165,7 @@ Recorded here so they are not silently relitigated:
 - **Commands, not `setState`.** Every mutation is a `Command` with
   `apply`/`invert`. Undo/redo falls out for free, and so — later — do macros,
   scripting, and multiplayer.
-- **Audio clock is the master clock.** Never `requestAnimationFrame`. Video
-  chases audio, because drift is audible long before it is visible.
+- **Audio clock is the master clock.** *(Implemented.)* See below.
 - **Timeline renders to canvas, not DOM.** DOM timelines degrade badly past
   roughly 200 clips. *(Implemented.)*
 

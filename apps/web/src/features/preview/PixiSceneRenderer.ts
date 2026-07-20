@@ -36,6 +36,7 @@ export class PixiSceneRenderer {
   /** Media ids requested but not yet decoded, so we ask only once. */
   private readonly requested = new Set<Id>();
   private onTextureReady: (() => void) | null = null;
+  private isPlaying = false;
 
   constructor(cache: MediaTextureCache) {
     this.cache = cache;
@@ -77,8 +78,14 @@ export class PixiSceneRenderer {
    * `assets` supplies the blob keys the scene's media ids refer to; the scene
    * itself deliberately carries no storage detail.
    */
-  render(scene: Scene, assets: Record<Id, MediaAsset>, displayWidth: number): void {
+  render(
+    scene: Scene,
+    assets: Record<Id, MediaAsset>,
+    displayWidth: number,
+    isPlaying = false,
+  ): void {
     if (!this.initialized) return;
+    this.isPlaying = isPlaying;
 
     // The preview canvas is smaller than the project frame, so the whole scene
     // is drawn at project scale and then scaled down as a unit. Every position
@@ -269,19 +276,37 @@ export class PixiSceneRenderer {
   /**
    * Aligns a video element to the playhead.
    *
-   * Seeking is only issued when the drift exceeds a threshold. `currentTime` is
-   * expensive and imprecise, so assigning it every frame during playback would
-   * fight the element's own decoding and produce stuttering rather than smooth
-   * playback.
+   * Two different jobs depending on transport state:
+   *
+   * - **Scrubbing.** The element stays paused and is seeked precisely, because
+   *   the user is looking for an exact frame.
+   * - **Playing.** The element plays under its own decoder and is only nudged
+   *   when it drifts badly. Assigning `currentTime` every frame would fight
+   *   that decoder and produce a stutter far worse than the drift it corrects.
+   *
+   * Video chases audio here; it is never the timebase.
    */
   private syncVideoTime(mediaId: Id, targetSeconds: number): void {
     const element = this.cache.getVideoElement(mediaId);
-    if (!element) return;
+    if (!element || !Number.isFinite(targetSeconds)) return;
 
     const drift = Math.abs(element.currentTime - targetSeconds);
-    if (drift > 0.15 && Number.isFinite(targetSeconds)) {
-      element.currentTime = Math.max(0, targetSeconds);
+
+    if (!this.isPlaying) {
+      if (!element.paused) element.pause();
+      if (drift > 1 / 120) element.currentTime = Math.max(0, targetSeconds);
+      return;
     }
+
+    if (element.paused) {
+      element.currentTime = Math.max(0, targetSeconds);
+      // Autoplay can still be refused; the frame simply stays where it is.
+      void element.play().catch(() => undefined);
+      return;
+    }
+
+    // Generous threshold: only correct drift a viewer would actually notice.
+    if (drift > 0.25) element.currentTime = Math.max(0, targetSeconds);
   }
 
   private drawShape(graphics: Graphics, node: SceneNode): void {
