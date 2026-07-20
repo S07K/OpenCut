@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { Frame, Id } from "@opencut/types";
 import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag } from "@opencut/timeline-engine";
@@ -16,6 +16,7 @@ import {
   type TimelineViewport,
 } from "./geometry";
 import { readTheme, renderTimeline, type TimelineTheme } from "./renderer";
+import { useElementSize } from "@/hooks/useElementSize";
 import {
   selectClipsArray,
   selectOrderedTracks,
@@ -49,8 +50,11 @@ export function TimelineCanvas() {
   const clipRectsRef = useRef<ClipRect[]>([]);
   const dragRef = useRef<DragMode>({ kind: "none" });
 
-  const [size, setSize] = useState({ width: 0, height: 0 });
   const [snapGuideFrame, setSnapGuideFrame] = useState<Frame | null>(null);
+
+  // Shared with the preview: measuring via ResizeObserver alone is not reliable
+  // enough for first paint (see the hook for why).
+  const size = useElementSize(containerRef);
 
   const project = useEditorStore((state) => state.project);
   const playhead = useEditorStore((state) => state.playhead);
@@ -76,23 +80,6 @@ export function TimelineCanvas() {
     [project.entities.markers],
   );
   const fps = project.settings.frameRate;
-
-  // --- Sizing -------------------------------------------------------------
-
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setSize({ width, height });
-    });
-
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
 
   // --- Drawing ------------------------------------------------------------
 

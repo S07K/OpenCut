@@ -309,6 +309,7 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
         trackId: target.id,
         startFrame,
         projectFrameRate: state.project.settings.frameRate,
+        projectResolution: state.project.settings.resolution,
       });
 
       return {

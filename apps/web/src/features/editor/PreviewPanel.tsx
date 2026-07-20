@@ -1,10 +1,12 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronsLeft, ChevronsRight, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { IconButton } from "@opencut/ui";
 import { formatTimecode } from "@opencut/timeline-engine";
 import { useEditorStore } from "@/state/editorStore";
+import { PreviewStage } from "@/features/preview/PreviewStage";
+import { useElementSize } from "@/hooks/useElementSize";
 
 /**
  * Video preview surface and transport controls.
@@ -16,7 +18,6 @@ import { useEditorStore } from "@/state/editorStore";
  */
 export function PreviewPanel() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [showGuides, setShowGuides] = useState(true);
 
   const resolution = useEditorStore((state) => state.project.settings.resolution);
@@ -30,28 +31,20 @@ export function PreviewPanel() {
   const setPlayhead = useEditorStore((state) => state.setPlayhead);
 
   // Fit the project's aspect ratio inside the available space, letterboxing as
-  // needed. Computed in a layout effect so the stage never paints at the wrong
-  // size for a frame.
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+  // needed. Derived during render rather than stored in state — it is a pure
+  // function of the container size and the project resolution, so keeping a
+  // second copy in state could only ever disagree with them.
+  const containerSize = useElementSize(containerRef);
 
-    const fit = () => {
-      const rect = container.getBoundingClientRect();
-      const padding = 32;
-      const availableWidth = Math.max(0, rect.width - padding);
-      const availableHeight = Math.max(0, rect.height - padding);
-      const projectAspect = resolution.width / resolution.height;
+  const stageSize = (() => {
+    const padding = 32;
+    const availableWidth = Math.max(0, containerSize.width - padding);
+    const availableHeight = Math.max(0, containerSize.height - padding);
+    const projectAspect = resolution.width / resolution.height;
 
-      const width = Math.min(availableWidth, availableHeight * projectAspect);
-      setStageSize({ width, height: width / projectAspect });
-    };
-
-    fit();
-    const observer = new ResizeObserver(fit);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [resolution.width, resolution.height]);
+    const width = Math.min(availableWidth, availableHeight * projectAspect);
+    return { width, height: width / projectAspect };
+  })();
 
   return (
     <div className="flex h-full flex-col bg-surface-base">
@@ -65,12 +58,9 @@ export function PreviewPanel() {
               backgroundColor: background,
             }}
           >
-            {/* PixiJS canvas mounts here. */}
-            <div className="absolute inset-0 grid place-items-center">
-              <p className="text-xs text-text-tertiary">
-                Preview renderer arrives in Phase 2
-              </p>
-            </div>
+            {stageSize.width > 0 && (
+              <PreviewStage width={stageSize.width} height={stageSize.height} />
+            )}
 
             {showGuides && <SafeGuides />}
           </div>
