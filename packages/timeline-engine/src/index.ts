@@ -5,7 +5,7 @@
  * export pipeline can reuse it verbatim and why its tests run in milliseconds.
  */
 
-export * from "./time.js";
-export * from "./range.js";
-export * from "./operations.js";
-export * from "./snapping.js";
+export * from "./time";
+export * from "./range";
+export * from "./operations";
+export * from "./snapping";

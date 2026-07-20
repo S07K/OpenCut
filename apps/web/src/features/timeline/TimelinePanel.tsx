@@ -1,0 +1,83 @@
+"use client";
+
+import { Magnet, Scissors, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { IconButton, Panel } from "@opencut/ui";
+import { formatTimecode } from "@opencut/timeline-engine";
+import { TimelineCanvas } from "./TimelineCanvas";
+import { TrackHeaders } from "./TrackHeaders";
+import { useEditorStore } from "@/state/editorStore";
+
+export function TimelinePanel() {
+  const playhead = useEditorStore((state) => state.playhead);
+  const fps = useEditorStore((state) => state.project.settings.frameRate);
+  const duration = useEditorStore((state) => state.project.durationFrames);
+  const snapEnabled = useEditorStore((state) => state.snapEnabled);
+  const selectionCount = useEditorStore((state) => state.selectedClipIds.length);
+
+  const zoomBy = useEditorStore((state) => state.zoomBy);
+  const toggleSnap = useEditorStore((state) => state.toggleSnap);
+  const splitAtPlayhead = useEditorStore((state) => state.splitAtPlayhead);
+  const deleteSelected = useEditorStore((state) => state.deleteSelected);
+
+  return (
+    <Panel
+      bare
+      className="border-t border-border-subtle"
+    >
+      <div className="flex h-full flex-col">
+        <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border-subtle px-2">
+          <span className="tabular text-sm text-text-primary">
+            {formatTimecode(playhead, fps)}
+          </span>
+          <span className="tabular text-xs text-text-tertiary">
+            / {formatTimecode(duration, fps)}
+          </span>
+
+          <div className="mx-2 h-4 w-px bg-border-subtle" />
+
+          <IconButton size="sm" label="Split at playhead (S)" onClick={splitAtPlayhead}>
+            <Scissors size={14} />
+          </IconButton>
+          <IconButton
+            size="sm"
+            label="Ripple delete selection (Delete)"
+            disabled={selectionCount === 0}
+            onClick={deleteSelected}
+          >
+            <Trash2 size={14} />
+          </IconButton>
+          <IconButton
+            size="sm"
+            label="Toggle snapping (N)"
+            active={snapEnabled}
+            onClick={toggleSnap}
+          >
+            <Magnet size={14} />
+          </IconButton>
+
+          <div className="flex-1" />
+
+          {selectionCount > 0 && (
+            <span className="mr-2 text-xs text-text-tertiary">
+              {selectionCount} selected
+            </span>
+          )}
+
+          <IconButton size="sm" label="Zoom out" onClick={() => zoomBy(1 / 1.3)}>
+            <ZoomOut size={14} />
+          </IconButton>
+          <IconButton size="sm" label="Zoom in" onClick={() => zoomBy(1.3)}>
+            <ZoomIn size={14} />
+          </IconButton>
+        </div>
+
+        <div className="flex min-h-0 flex-1">
+          <TrackHeaders />
+          <div className="min-w-0 flex-1">
+            <TimelineCanvas />
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+}

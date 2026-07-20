@@ -7,7 +7,7 @@
  * re-timing after an edit all possible without destroying the transcript.
  */
 
-import type { Frame, Id, Unit } from "./primitives.js";
+import type { Frame, Id, Unit } from "./primitives";
 
 export interface CaptionWord {
   text: string;

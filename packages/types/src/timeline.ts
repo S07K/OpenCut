@@ -7,8 +7,8 @@
  * arrays — which matters because that operation happens on every drag frame.
  */
 
-import type { EffectInstance } from "./effects.js";
-import type { Frame, Id, Unit } from "./primitives.js";
+import type { EffectInstance } from "./effects";
+import type { Frame, Id, Unit } from "./primitives";
 
 export type TrackKind = "video" | "audio" | "caption" | "overlay";
 

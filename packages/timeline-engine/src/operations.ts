@@ -11,7 +11,7 @@
  */
 
 import type { Clip, Frame, FrameDuration, Id } from "@opencut/types";
-import { rangeOf } from "./range.js";
+import { rangeOf } from "./range";
 
 /** Minimum clip length. Zero-length clips are unselectable and unrenderable. */
 export const MIN_CLIP_FRAMES = 1;

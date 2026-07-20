@@ -8,7 +8,7 @@
  * put a value that a keyframe cannot reach.
  */
 
-import type { Frame, Unit, Vec2 } from "./primitives.js";
+import type { Frame, Unit, Vec2 } from "./primitives";
 
 /** Interpolation applied on the segment *leaving* a keyframe. */
 export type EasingKind = "hold" | "linear" | "ease-in" | "ease-out" | "ease-in-out" | "bezier" | "spring";

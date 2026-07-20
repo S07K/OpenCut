@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDuration, formatTimecode, framesToSeconds, secondsToFrames } from "../time.js";
+import { formatDuration, formatTimecode, framesToSeconds, secondsToFrames } from "../time";
 
 describe("frame/second conversion", () => {
   it("round-trips without drift", () => {

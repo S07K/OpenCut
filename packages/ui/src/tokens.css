@@ -1,0 +1,123 @@
+/**
+ * OpenCut design tokens.
+ *
+ * Dark-first: the dark palette is the *default* under `:root`, and light is an
+ * override. Editors are used in dim rooms next to bright footage, and a UI that
+ * glows washes out the very thing the user is grading.
+ *
+ * The scale is deliberately small. Three surface levels, one accent, four text
+ * weights. A large token set is how design systems drift — if there are nine
+ * greys, contributors pick the wrong one and nobody notices for months.
+ */
+
+@theme {
+  /* --- Surfaces -------------------------------------------------------- */
+  /* Neutrals carry a slight blue cast; pure grey reads muddy next to video. */
+  --color-surface-base: oklch(0.18 0.008 265);
+  --color-surface-panel: oklch(0.22 0.008 265);
+  --color-surface-raised: oklch(0.26 0.009 265);
+  --color-surface-overlay: oklch(0.3 0.01 265);
+  --color-surface-input: oklch(0.16 0.008 265);
+
+  /* The canvas behind the video preview. Near-black so footage is judged
+     against neutral, not against the UI. */
+  --color-canvas: oklch(0.12 0.005 265);
+
+  /* --- Borders --------------------------------------------------------- */
+  --color-border-subtle: oklch(0.28 0.009 265);
+  --color-border-default: oklch(0.34 0.01 265);
+  --color-border-strong: oklch(0.44 0.012 265);
+
+  /* --- Text ------------------------------------------------------------ */
+  --color-text-primary: oklch(0.96 0.003 265);
+  --color-text-secondary: oklch(0.76 0.008 265);
+  --color-text-tertiary: oklch(0.58 0.01 265);
+  --color-text-disabled: oklch(0.44 0.01 265);
+
+  /* --- Accent ---------------------------------------------------------- */
+  /* One accent, used for selection, focus, and the playhead. Restraint here is
+     what keeps the timeline readable when 40 clips are on screen. */
+  --color-accent: oklch(0.68 0.19 265);
+  --color-accent-hover: oklch(0.73 0.19 265);
+  --color-accent-muted: oklch(0.68 0.19 265 / 0.16);
+  --color-accent-text: oklch(0.99 0 0);
+
+  /* --- Status ---------------------------------------------------------- */
+  --color-success: oklch(0.72 0.17 155);
+  --color-warning: oklch(0.78 0.16 75);
+  --color-danger: oklch(0.65 0.2 25);
+
+  /* --- Track colors ---------------------------------------------------- */
+  /* Clips are tinted by kind so the timeline is scannable at a glance without
+     reading a single label. */
+  --color-clip-video: oklch(0.6 0.14 265);
+  --color-clip-audio: oklch(0.65 0.15 155);
+  --color-clip-text: oklch(0.72 0.15 75);
+  --color-clip-image: oklch(0.65 0.15 320);
+  --color-clip-shape: oklch(0.66 0.13 200);
+
+  /* --- Radii ----------------------------------------------------------- */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* --- Typography ------------------------------------------------------ */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Timecodes must be tabular or the playhead readout jitters as digits change. */
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+
+  /* --- Motion ---------------------------------------------------------- */
+  /* Fast and short. Editor UI is operated at speed; anything over ~150ms feels
+     like lag rather than polish. */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --duration-instant: 80ms;
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+
+  /* --- Elevation ------------------------------------------------------- */
+  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-popover: 0 8px 24px oklch(0 0 0 / 0.4), 0 2px 6px oklch(0 0 0 / 0.3);
+  --shadow-modal: 0 24px 60px oklch(0 0 0 / 0.55);
+
+  /* --- Layout ---------------------------------------------------------- */
+  --size-toolbar-height: 44px;
+  --size-statusbar-height: 26px;
+  --size-panel-min-width: 200px;
+  --size-timeline-min-height: 160px;
+  --size-track-header-width: 168px;
+  --size-ruler-height: 28px;
+}
+
+/**
+ * Light theme override.
+ *
+ * Supported, but explicitly the secondary target — we do not ship a light-mode
+ * screenshot as the hero image, and grading accuracy is only claimed in dark.
+ */
+:root[data-theme="light"] {
+  --color-surface-base: oklch(0.97 0.002 265);
+  --color-surface-panel: oklch(1 0 0);
+  --color-surface-raised: oklch(0.99 0.001 265);
+  --color-surface-overlay: oklch(1 0 0);
+  --color-surface-input: oklch(0.95 0.003 265);
+  --color-canvas: oklch(0.9 0.003 265);
+
+  --color-border-subtle: oklch(0.91 0.004 265);
+  --color-border-default: oklch(0.85 0.006 265);
+  --color-border-strong: oklch(0.72 0.008 265);
+
+  --color-text-primary: oklch(0.22 0.01 265);
+  --color-text-secondary: oklch(0.42 0.012 265);
+  --color-text-tertiary: oklch(0.56 0.012 265);
+  --color-text-disabled: oklch(0.7 0.01 265);
+}

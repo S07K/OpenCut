@@ -12,11 +12,11 @@
  *    today still opens in two years.
  */
 
-import type { CaptionTrackData } from "./caption.js";
-import type { MediaAsset } from "./media.js";
-import type { Clip } from "./objects.js";
-import type { Frame, Id, Size } from "./primitives.js";
-import type { Marker, Track } from "./timeline.js";
+import type { CaptionTrackData } from "./caption";
+import type { MediaAsset } from "./media";
+import type { Clip } from "./objects";
+import type { Frame, Id, Size } from "./primitives";
+import type { Marker, Track } from "./timeline";
 
 /** Bumped whenever a breaking change lands; drives the migration chain. */
 export const SCHEMA_VERSION = 1;

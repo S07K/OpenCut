@@ -10,11 +10,11 @@
  * touching the transform, mask, or animation code.
  */
 
-import type { Animatable } from "./animation.js";
-import type { ColorGrade } from "./color.js";
-import type { EffectInstance } from "./effects.js";
-import type { Mask } from "./mask.js";
-import type { Degrees, Frame, FrameDuration, Id, Unit, Vec2 } from "./primitives.js";
+import type { Animatable } from "./animation";
+import type { ColorGrade } from "./color";
+import type { EffectInstance } from "./effects";
+import type { Mask } from "./mask";
+import type { Degrees, Frame, FrameDuration, Id, Unit, Vec2 } from "./primitives";
 
 /** Spatial transform shared by every visual object. */
 export interface Transform {

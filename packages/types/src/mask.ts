@@ -7,8 +7,8 @@
  * feather/expand/invert implementation in the compositor.
  */
 
-import type { Animatable, MotionPath } from "./animation.js";
-import type { Degrees, Id, Unit, Vec2 } from "./primitives.js";
+import type { Animatable, MotionPath } from "./animation";
+import type { Degrees, Id, Unit, Vec2 } from "./primitives";
 
 export interface RectangleMaskShape {
   kind: "rectangle";

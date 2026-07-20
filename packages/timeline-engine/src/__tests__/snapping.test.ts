@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Marker } from "@opencut/types";
-import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag, snapFrame, type SnapContext } from "../snapping.js";
-import { makeClip } from "./fixtures.js";
+import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag, snapFrame, type SnapContext } from "../snapping";
+import { makeClip } from "./fixtures";
 
 function makeContext(overrides: Partial<SnapContext> = {}): SnapContext {
   return {

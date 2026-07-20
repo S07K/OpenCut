@@ -8,8 +8,8 @@
  * than decorative.
  */
 
-import type { Animatable } from "./animation.js";
-import type { Id } from "./primitives.js";
+import type { Animatable } from "./animation";
+import type { Id } from "./primitives";
 
 /** Values an effect parameter may hold. Constrained so it stays serializable. */
 export type EffectParamValue = number | string | boolean | number[];

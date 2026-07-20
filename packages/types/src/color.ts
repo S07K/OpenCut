@@ -5,8 +5,8 @@
  * flash-to-white transition) without a separate effect existing.
  */
 
-import type { Animatable } from "./animation.js";
-import type { Unit, Vec2 } from "./primitives.js";
+import type { Animatable } from "./animation";
+import type { Unit, Vec2 } from "./primitives";
 
 /** A single control point on a tone curve, in normalized 0..1 space. */
 export type CurvePoint = Vec2;

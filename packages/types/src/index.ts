@@ -7,13 +7,13 @@
  * independently testable and independently publishable.
  */
 
-export * from "./primitives.js";
-export * from "./animation.js";
-export * from "./mask.js";
-export * from "./color.js";
-export * from "./effects.js";
-export * from "./objects.js";
-export * from "./timeline.js";
-export * from "./media.js";
-export * from "./caption.js";
-export * from "./project.js";
+export * from "./primitives";
+export * from "./animation";
+export * from "./mask";
+export * from "./color";
+export * from "./effects";
+export * from "./objects";
+export * from "./timeline";
+export * from "./media";
+export * from "./caption";
+export * from "./project";

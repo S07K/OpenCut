@@ -8,7 +8,7 @@
  * any given browser chose to persist blobs.
  */
 
-import type { Id, Size } from "./primitives.js";
+import type { Id, Size } from "./primitives";
 
 export type MediaKind = "video" | "audio" | "image" | "gif" | "font";
 

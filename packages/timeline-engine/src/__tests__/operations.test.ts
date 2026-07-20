@@ -8,8 +8,8 @@ import {
   splitClip,
   trimClipEnd,
   trimClipStart,
-} from "../operations.js";
-import { makeClip } from "./fixtures.js";
+} from "../operations";
+import { makeClip } from "./fixtures";
 
 describe("splitClip", () => {
   it("splits into two adjacent halves with no gap or overlap", () => {
