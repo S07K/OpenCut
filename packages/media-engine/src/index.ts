@@ -13,3 +13,4 @@ export * from "./probe";
 export * from "./waveform";
 export * from "./import";
 export * from "./clip";
+export * from "./gc";

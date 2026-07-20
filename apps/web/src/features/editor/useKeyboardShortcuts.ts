@@ -11,7 +11,7 @@ import { useEditorStore } from "@/state/editorStore";
  * guard below is what makes that safe — without it, typing "s" into a caption
  * would split the timeline.
  */
-export function useKeyboardShortcuts(): void {
+export function useKeyboardShortcuts(onSave?: () => void): void {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -19,7 +19,11 @@ export function useKeyboardShortcuts(): void {
         target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||
         target?.isContentEditable === true;
-      if (isTextEntry) return;
+      const isSaveCombo =
+        (event.metaKey || event.ctrlKey) && (event.key === "s" || event.key === "S");
+      // Every shortcut yields to text entry except save: renaming the project
+      // and then pressing Cmd+S is an entirely normal sequence.
+      if (isTextEntry && !isSaveCombo) return;
 
       const state = useEditorStore.getState();
       const stepSize = event.shiftKey ? 10 : 1;
@@ -52,8 +56,13 @@ export function useKeyboardShortcuts(): void {
 
         case "s":
         case "S":
-          // Cmd/Ctrl+S is Save, which must not be hijacked by Split.
-          if (event.metaKey || event.ctrlKey) return;
+          if (event.metaKey || event.ctrlKey) {
+            // Claim Cmd/Ctrl+S so the browser does not offer to save the page,
+            // which is never what someone means in an editor.
+            event.preventDefault();
+            onSave?.();
+            return;
+          }
           event.preventDefault();
           state.splitAtPlayhead();
           break;
@@ -93,5 +102,5 @@ export function useKeyboardShortcuts(): void {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [onSave]);
 }

@@ -66,18 +66,20 @@ WebCodecs with FFmpeg.wasm fallback (planned) · IndexedDB · Vitest · Playwrig
 ## Roadmap
 
 - [x] **Phase 1** — Monorepo, design system, docking layout, canvas timeline, media import
-- [ ] **Phase 2** — Preview renderer ✅, playback, undo/redo, project save
+- [ ] **Phase 2** — Preview renderer ✅, project save ✅, playback, undo/redo
 - [ ] **Phase 3** — Animation engine, keyframes, masking
 - [ ] **Phase 4** — Captions via local Whisper
 - [ ] **Phase 5** — Color grading, aspect ratios, effects
 - [ ] **Phase 6** — Export engine, performance, plugin SDK
 
-Phase 1 is complete. The preview renderer (PixiJS) now composites the timeline;
-playback, undo/redo, and project save are next.
+Phase 1 is complete. The preview renderer composites the timeline, and projects
+autosave locally and restore on reload. Playback and undo/redo are next.
 
-**Known gap:** projects are not persisted yet, so imported media is lost on
-reload while its bytes remain in IndexedDB. Project save (Phase 2) lands
-alongside a startup sweep that deletes blobs no project references.
+Projects are stored in IndexedDB and can be saved to / opened from `.opencut`
+files — plain JSON you can diff in git or paste into a bug report. Loading is
+repair-oriented: a corrupt clip is dropped and reported rather than refusing to
+open a project someone has hours of work in. Media blobs no project references
+are swept on startup.
 
 ## Development
 
@@ -97,6 +99,7 @@ pnpm build       # production build
 | `S` | Split at playhead |
 | `N` | Toggle snapping |
 | `Delete` | Ripple delete selection |
+| `Cmd/Ctrl` + `S` | Save now |
 | `+` / `-` | Zoom timeline |
 | `Home` / `End` | Jump to start / end |
 

@@ -62,6 +62,10 @@ export interface EditorState {
   removeMediaAsset: (assetId: Id) => void;
   /** Appends a clip for the asset to the end of a compatible track. */
   addClipFromAsset: (assetId: Id) => void;
+
+  /** Swaps in a whole document, on project load or restore. */
+  replaceProject: (project: ProjectDocument) => void;
+  renameProject: (name: string) => void;
 }
 
 /** Recomputes derived document fields after any structural edit. */
@@ -220,6 +224,23 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
         },
       };
     }),
+
+  replaceProject: (project) =>
+    // View state is reset alongside the document: a playhead or selection
+    // carried over from the previous project would point at clips that no
+    // longer exist.
+    set({
+      project,
+      playhead: 0,
+      scrollFrame: 0,
+      selectedClipIds: [],
+      isPlaying: false,
+    }),
+
+  renameProject: (name) =>
+    set((state) => ({
+      project: { ...state.project, name, modifiedAt: Date.now() },
+    })),
 
   addMediaAssets: (assets) =>
     set((state) => {

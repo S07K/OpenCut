@@ -7,9 +7,12 @@ import { PreviewPanel } from "./PreviewPanel";
 import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+import { useProject } from "@/features/project/ProjectProvider";
 import { TimelinePanel } from "@/features/timeline/TimelinePanel";
 import { DropOverlay } from "@/features/media/DropOverlay";
 import { MediaImportProvider } from "@/features/media/MediaImportProvider";
+import { ProjectProvider } from "@/features/project/ProjectProvider";
+import { LoadIssuesBanner } from "@/features/project/LoadIssuesBanner";
 
 /**
  * The editor layout.
@@ -24,10 +27,11 @@ import { MediaImportProvider } from "@/features/media/MediaImportProvider";
  * component boundaries here do not have to change.
  */
 export function EditorShell() {
-  useKeyboardShortcuts();
 
   return (
     <MediaImportProvider>
+      <ProjectProvider>
+      <EditorKeyboard />
       <div className="flex h-full w-full flex-col overflow-hidden">
         <TopToolbar />
 
@@ -79,7 +83,22 @@ export function EditorShell() {
 
         <StatusBar />
         <DropOverlay />
+        <LoadIssuesBanner />
       </div>
+      </ProjectProvider>
     </MediaImportProvider>
   );
+}
+
+/**
+ * Binds global shortcuts.
+ *
+ * A component rather than a hook call in `EditorShell`, because the shortcuts
+ * need the persistence context — and `EditorShell` is what renders the provider,
+ * so it cannot consume it.
+ */
+function EditorKeyboard() {
+  const { saveNow } = useProject();
+  useKeyboardShortcuts(() => void saveNow());
+  return null;
 }

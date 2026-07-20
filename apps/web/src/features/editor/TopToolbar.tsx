@@ -1,17 +1,21 @@
 "use client";
 
 import { useRef } from "react";
-import { Download, Import, Redo2, Search, Settings, Undo2 } from "lucide-react";
+import { Download, FolderOpen, Import, Redo2, Save, Search, Settings, Undo2 } from "lucide-react";
 import { Button, IconButton } from "@opencut/ui";
 import { useEditorStore } from "@/state/editorStore";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
+import { useProject } from "@/features/project/ProjectProvider";
 
 export function TopToolbar() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const projectInputRef = useRef<HTMLInputElement>(null);
   const { importFromFiles, isImporting } = useMediaImportContext();
+  const { saveNow, downloadProject, openProjectFile } = useProject();
   const projectName = useEditorStore((state) => state.project.name);
   const resolution = useEditorStore((state) => state.project.settings.resolution);
   const fps = useEditorStore((state) => state.project.settings.frameRate);
+  const renameProject = useEditorStore((state) => state.renameProject);
 
   return (
     <header className="flex h-(--size-toolbar-height) shrink-0 items-center gap-1 border-b border-border-subtle bg-surface-panel px-3">
@@ -57,7 +61,12 @@ export function TopToolbar() {
 
       <div className="flex flex-1 items-center justify-center">
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-medium text-text-primary">{projectName}</span>
+          <input
+            aria-label="Project name"
+            value={projectName}
+            onChange={(event) => renameProject(event.target.value)}
+            className="w-48 rounded-xs bg-transparent px-1 text-center text-xs font-medium text-text-primary hover:bg-surface-raised focus:bg-surface-input focus:outline-none"
+          />
           <span className="tabular text-text-tertiary">
             {resolution.width}×{resolution.height} · {fps}fps
           </span>
@@ -69,6 +78,28 @@ export function TopToolbar() {
       </IconButton>
       <IconButton size="sm" label="Project settings">
         <Settings size={14} />
+      </IconButton>
+
+      <IconButton
+        size="sm"
+        label="Open project file"
+        onClick={() => projectInputRef.current?.click()}
+      >
+        <FolderOpen size={14} />
+      </IconButton>
+      <input
+        ref={projectInputRef}
+        type="file"
+        accept=".opencut,application/json"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void openProjectFile(file);
+          event.target.value = "";
+        }}
+      />
+      <IconButton size="sm" label="Save project to a file" onClick={downloadProject}>
+        <Save size={14} />
       </IconButton>
 
       <Button size="sm" variant="primary" icon={<Download size={14} />}>

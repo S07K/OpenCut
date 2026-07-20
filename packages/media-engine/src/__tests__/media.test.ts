@@ -3,6 +3,7 @@ import { classifyFile, extensionOf, formatByteSize } from "../mime";
 import { computePeaks, deserializeWaveform, mixToMono, serializeWaveform } from "../waveform";
 import { MemoryMediaStore } from "../storage";
 import { assetDurationInFrames, DEFAULT_STILL_DURATION_SECONDS } from "../import";
+import { collectGarbage } from "../gc";
 import type { MediaAsset } from "@opencut/types";
 
 describe("classifyFile", () => {
@@ -177,5 +178,52 @@ describe("assetDurationInFrames", () => {
 
   it("never returns a zero-length clip", () => {
     expect(assetDurationInFrames(asset(0.001), 30)).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("collectGarbage", () => {
+  async function seeded() {
+    const store = new MemoryMediaStore();
+    await store.put("keep:source", new Blob(["aaaa"]));
+    await store.put("keep:thumb", new Blob(["bb"]));
+    await store.put("orphan:source", new Blob(["cccccc"]));
+    await store.put("orphan:thumb", new Blob(["d"]));
+    return store;
+  }
+
+  it("deletes only unreferenced blobs", async () => {
+    const store = await seeded();
+    const result = await collectGarbage(store, new Set(["keep:source", "keep:thumb"]));
+
+    expect(result.deletedKeys.sort()).toEqual(["orphan:source", "orphan:thumb"]);
+    expect((await store.keys()).sort()).toEqual(["keep:source", "keep:thumb"]);
+    expect(result.keptCount).toBe(2);
+  });
+
+  it("reports the bytes reclaimed", async () => {
+    const store = await seeded();
+    const result = await collectGarbage(store, new Set(["keep:source", "keep:thumb"]));
+    expect(result.bytesFreed).toBe(7);
+  });
+
+  it("deletes everything when nothing is referenced", async () => {
+    const store = await seeded();
+    await collectGarbage(store, new Set());
+    expect(await store.keys()).toEqual([]);
+  });
+
+  it("keeps everything when all keys are referenced", async () => {
+    const store = await seeded();
+    const keys = await store.keys();
+    const result = await collectGarbage(store, new Set(keys));
+
+    expect(result.deletedKeys).toEqual([]);
+    expect(await store.keys()).toHaveLength(4);
+  });
+
+  it("is a no-op on an empty store", async () => {
+    const result = await collectGarbage(new MemoryMediaStore(), new Set(["x"]));
+    expect(result.deletedKeys).toEqual([]);
+    expect(result.bytesFreed).toBe(0);
   });
 });

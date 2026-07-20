@@ -1,8 +1,9 @@
 "use client";
 
-import { HardDriveDownload, WifiOff } from "lucide-react";
+import { WifiOff } from "lucide-react";
 import { formatDuration } from "@opencut/timeline-engine";
 import { useEditorStore } from "@/state/editorStore";
+import { SaveIndicator } from "@/features/project/SaveIndicator";
 
 export function StatusBar() {
   const duration = useEditorStore((state) => state.project.durationFrames);
@@ -32,10 +33,7 @@ export function StatusBar() {
 
       <div className="h-3 w-px bg-border-subtle" />
 
-      <span className="flex items-center gap-1">
-        <HardDriveDownload size={11} />
-        Not saved yet
-      </span>
+      <SaveIndicator />
     </footer>
   );
 }

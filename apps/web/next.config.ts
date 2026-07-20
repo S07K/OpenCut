@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     "@opencut/media-engine",
     "@opencut/animation-engine",
     "@opencut/render-engine",
+    "@opencut/project-io",
     "@opencut/ui",
   ],
 };

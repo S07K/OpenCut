@@ -32,6 +32,9 @@ importers:
       '@opencut/media-engine':
         specifier: workspace:*
         version: link:../../packages/media-engine
+      '@opencut/project-io':
+        specifier: workspace:*
+        version: link:../../packages/project-io
       '@opencut/render-engine':
         specifier: workspace:*
         version: link:../../packages/render-engine
@@ -108,6 +111,19 @@ importers:
         version: 2.1.9(@types/node@22.20.1)(lightningcss@1.32.0)
 
   packages/media-engine:
+    dependencies:
+      '@opencut/types':
+        specifier: workspace:*
+        version: link:../types
+      '@opencut/utils':
+        specifier: workspace:*
+        version: link:../utils
+    devDependencies:
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.1)(lightningcss@1.32.0)
+
+  packages/project-io:
     dependencies:
       '@opencut/types':
         specifier: workspace:*
