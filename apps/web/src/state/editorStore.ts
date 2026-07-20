@@ -1,10 +1,10 @@
 "use client";
 
 import { create } from "zustand";
-import type { Clip, Frame, Id, ProjectDocument, Track } from "@opencut/types";
+import type { Clip, Frame, Id, MediaAsset, ProjectDocument, Track } from "@opencut/types";
 import { computeDuration, moveClip, rippleDelete, splitClip } from "@opencut/timeline-engine";
-import { createId } from "@opencut/utils";
-import { createDemoProject } from "./demoProject";
+import { createClipForAsset, trackKindForAsset } from "@opencut/media-engine";
+import { createId, createProject, createTrack } from "@opencut/utils";
 
 /**
  * Editor state.
@@ -55,6 +55,13 @@ export interface EditorState {
   splitAtPlayhead: () => void;
   deleteSelected: () => void;
   setTrackFlag: (trackId: Id, flag: "locked" | "hidden" | "muted", value: boolean) => void;
+
+  addMediaAssets: (assets: MediaAsset[]) => void;
+  /** Replaces an asset in place, for late-arriving thumbnails and waveforms. */
+  upsertMediaAsset: (asset: MediaAsset) => void;
+  removeMediaAsset: (assetId: Id) => void;
+  /** Appends a clip for the asset to the end of a compatible track. */
+  addClipFromAsset: (assetId: Id) => void;
 }
 
 /** Recomputes derived document fields after any structural edit. */
@@ -67,7 +74,9 @@ function withDerived(project: ProjectDocument): ProjectDocument {
 }
 
 export const useEditorStore = create<EditorState>()((set, get) => ({
-  project: createDemoProject(),
+  // Opens empty. No demo content, no sample project — import your footage and
+  // start, which is the whole promise of the tool.
+  project: createProject(),
 
   playhead: 0,
   pixelsPerFrame: DEFAULT_PIXELS_PER_FRAME,
@@ -209,6 +218,110 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
             tracks: { ...state.project.entities.tracks, [trackId]: updated },
           },
         },
+      };
+    }),
+
+  addMediaAssets: (assets) =>
+    set((state) => {
+      if (assets.length === 0) return state;
+
+      const media = { ...state.project.entities.media };
+      for (const asset of assets) media[asset.id] = asset;
+
+      return {
+        project: {
+          ...state.project,
+          entities: { ...state.project.entities, media },
+          modifiedAt: Date.now(),
+        },
+      };
+    }),
+
+  upsertMediaAsset: (asset) =>
+    set((state) => {
+      // Only applies to assets still present: a thumbnail finishing after the
+      // user removed the asset must not resurrect it.
+      if (!state.project.entities.media[asset.id]) return state;
+
+      return {
+        project: {
+          ...state.project,
+          entities: {
+            ...state.project.entities,
+            media: { ...state.project.entities.media, [asset.id]: asset },
+          },
+        },
+      };
+    }),
+
+  removeMediaAsset: (assetId) =>
+    set((state) => {
+      const media = { ...state.project.entities.media };
+      if (!media[assetId]) return state;
+      delete media[assetId];
+
+      // Clips referencing the removed asset go with it — leaving them would
+      // produce clips that can never render and cannot be explained to the user.
+      const clips = Object.fromEntries(
+        Object.entries(state.project.entities.clips).filter(
+          ([, clip]) => !("mediaId" in clip.content) || clip.content.mediaId !== assetId,
+        ),
+      );
+
+      return {
+        selectedClipIds: [],
+        project: withDerived({
+          ...state.project,
+          entities: { ...state.project.entities, media, clips },
+        }),
+      };
+    }),
+
+  addClipFromAsset: (assetId) =>
+    set((state) => {
+      const asset = state.project.entities.media[assetId];
+      if (!asset) return state;
+
+      const wantedKind = trackKindForAsset(asset);
+      const tracks = { ...state.project.entities.tracks };
+      let trackOrder = [...state.project.trackOrder];
+
+      // Prefer an existing unlocked track of the right kind; create one only if
+      // there is none, so repeated imports stack up rather than sprawling into
+      // a new track per file.
+      let target = trackOrder
+        .map((id) => tracks[id])
+        .find((track): track is Track => Boolean(track) && track.kind === wantedKind && !track.locked);
+
+      if (!target) {
+        target = createTrack({ kind: wantedKind, index: trackOrder.length });
+        tracks[target.id] = target;
+        trackOrder = [...trackOrder, target.id];
+      }
+
+      const trackClips = Object.values(state.project.entities.clips).filter(
+        (clip) => clip.trackId === target.id,
+      );
+      const startFrame = computeDuration(trackClips);
+
+      const clip = createClipForAsset({
+        asset,
+        trackId: target.id,
+        startFrame,
+        projectFrameRate: state.project.settings.frameRate,
+      });
+
+      return {
+        selectedClipIds: [clip.id],
+        project: withDerived({
+          ...state.project,
+          entities: {
+            ...state.project.entities,
+            tracks,
+            clips: { ...state.project.entities.clips, [clip.id]: clip },
+          },
+          trackOrder,
+        }),
       };
     }),
 }));

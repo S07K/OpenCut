@@ -8,6 +8,8 @@ import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { TimelinePanel } from "@/features/timeline/TimelinePanel";
+import { DropOverlay } from "@/features/media/DropOverlay";
+import { MediaImportProvider } from "@/features/media/MediaImportProvider";
 
 /**
  * The editor layout.
@@ -25,13 +27,14 @@ export function EditorShell() {
   useKeyboardShortcuts();
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
-      <TopToolbar />
+    <MediaImportProvider>
+      <div className="flex h-full w-full flex-col overflow-hidden">
+        <TopToolbar />
 
-      <div className="min-h-0 flex-1">
-        <SplitPane
-          direction="vertical"
-          storageKey="root"
+        <div className="min-h-0 flex-1">
+          <SplitPane
+            direction="vertical"
+            storageKey="root"
           panes={[
             {
               id: "workspace",
@@ -70,11 +73,13 @@ export function EditorShell() {
               minSize: 180,
               content: <TimelinePanel />,
             },
-          ]}
-        />
-      </div>
+            ]}
+          />
+        </div>
 
-      <StatusBar />
-    </div>
+        <StatusBar />
+        <DropOverlay />
+      </div>
+    </MediaImportProvider>
   );
 }

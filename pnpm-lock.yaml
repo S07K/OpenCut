@@ -26,6 +26,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@opencut/media-engine':
+        specifier: workspace:*
+        version: link:../../packages/media-engine
       '@opencut/timeline-engine':
         specifier: workspace:*
         version: link:../../packages/timeline-engine
@@ -84,6 +87,19 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/media-engine:
+    dependencies:
+      '@opencut/types':
+        specifier: workspace:*
+        version: link:../types
+      '@opencut/utils':
+        specifier: workspace:*
+        version: link:../utils
+    devDependencies:
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.1)(lightningcss@1.32.0)
 
   packages/timeline-engine:
     dependencies:

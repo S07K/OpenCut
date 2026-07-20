@@ -1,10 +1,14 @@
 "use client";
 
+import { useRef } from "react";
 import { Download, Import, Redo2, Search, Settings, Undo2 } from "lucide-react";
 import { Button, IconButton } from "@opencut/ui";
 import { useEditorStore } from "@/state/editorStore";
+import { useMediaImportContext } from "@/features/media/MediaImportProvider";
 
 export function TopToolbar() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { importFromFiles, isImporting } = useMediaImportContext();
   const projectName = useEditorStore((state) => state.project.name);
   const resolution = useEditorStore((state) => state.project.settings.resolution);
   const fps = useEditorStore((state) => state.project.settings.frameRate);
@@ -20,9 +24,26 @@ export function TopToolbar() {
 
       <div className="mx-1 h-5 w-px bg-border-subtle" />
 
-      <Button size="sm" variant="ghost" icon={<Import size={14} />}>
-        Import
+      <Button
+        size="sm"
+        variant="ghost"
+        icon={<Import size={14} />}
+        disabled={isImporting}
+        onClick={() => inputRef.current?.click()}
+      >
+        {isImporting ? "Importing…" : "Import"}
       </Button>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept="video/*,audio/*,image/*"
+        className="hidden"
+        onChange={(event) => {
+          if (event.target.files) void importFromFiles(event.target.files);
+          event.target.value = "";
+        }}
+      />
 
       {/* Undo/redo are inert until the history engine lands in Phase 2. They
           are rendered disabled rather than hidden so the toolbar's final layout

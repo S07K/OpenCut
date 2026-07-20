@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src"]
+}

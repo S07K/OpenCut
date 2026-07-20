@@ -11,6 +11,7 @@
     "clean": "rm -rf .next .turbo *.tsbuildinfo"
   },
   "dependencies": {
+    "@opencut/media-engine": "workspace:*",
     "@opencut/timeline-engine": "workspace:*",
     "@opencut/types": "workspace:*",
     "@opencut/ui": "workspace:*",

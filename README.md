@@ -65,15 +65,19 @@ WebCodecs with FFmpeg.wasm fallback (planned) · IndexedDB · Vitest · Playwrig
 
 ## Roadmap
 
-- [x] **Phase 1** — Monorepo, design system, docking layout, canvas timeline
-- [ ] **Phase 2** — Playback, object system, undo/redo, project save
+- [x] **Phase 1** — Monorepo, design system, docking layout, canvas timeline, media import
+- [ ] **Phase 2** — Preview renderer, playback, undo/redo, project save
 - [ ] **Phase 3** — Animation engine, keyframes, masking
 - [ ] **Phase 4** — Captions via local Whisper
 - [ ] **Phase 5** — Color grading, aspect ratios, effects
 - [ ] **Phase 6** — Export engine, performance, plugin SDK
 
-Phase 1 is partially complete: media import and the preview renderer are still
-outstanding.
+Phase 1 is complete except for the preview renderer, which is Phase 2's first
+task.
+
+**Known gap:** projects are not persisted yet, so imported media is lost on
+reload while its bytes remain in IndexedDB. Project save (Phase 2) lands
+alongside a startup sweep that deletes blobs no project references.
 
 ## Development
 

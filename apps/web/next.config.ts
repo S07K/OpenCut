@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     "@opencut/types",
     "@opencut/utils",
     "@opencut/timeline-engine",
+    "@opencut/media-engine",
     "@opencut/ui",
   ],
 };
