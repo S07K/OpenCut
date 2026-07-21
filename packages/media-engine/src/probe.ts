@@ -205,9 +205,7 @@ export async function generateThumbnail(file: File): Promise<Blob | null> {
     if (kind === "video") {
       return await withObjectURL(file, async (url) => {
         const video = await loadVideoElement(url);
-        const target = Number.isFinite(video.duration)
-          ? Math.min(video.duration * 0.1, 2)
-          : 0;
+        const target = Number.isFinite(video.duration) ? Math.min(video.duration * 0.1, 2) : 0;
         await seekTo(video, target);
 
         const size = fitWithin(video.videoWidth, video.videoHeight, THUMBNAIL_MAX_EDGE);

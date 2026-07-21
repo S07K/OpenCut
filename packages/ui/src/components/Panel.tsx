@@ -22,14 +22,14 @@ export interface PanelProps {
  */
 export function Panel({ title, actions, children, className, bare }: PanelProps) {
   return (
-    <section className={cn("flex h-full min-h-0 flex-col bg-surface-panel", className)}>
+    <section className={cn("bg-surface-panel flex h-full min-h-0 flex-col", className)}>
       {!bare && (
         <header
           className={cn(
-            "flex h-9 shrink-0 items-center justify-between gap-2 border-b border-border-subtle px-3",
+            "border-border-subtle flex h-9 shrink-0 items-center justify-between gap-2 border-b px-3",
           )}
         >
-          <h2 className="truncate text-xs font-medium tracking-wide text-text-secondary uppercase">
+          <h2 className="text-text-secondary truncate text-xs font-medium tracking-wide uppercase">
             {title}
           </h2>
           {actions && <div className="flex shrink-0 items-center gap-0.5">{actions}</div>}

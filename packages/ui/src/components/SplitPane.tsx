@@ -122,10 +122,7 @@ export function SplitPane({ direction, panes, storageKey, className }: SplitPane
         const deltaFraction = deltaPx / extent;
         // Clamp against both neighbours so neither can be pushed under its
         // minimum, and so the pair's combined size is exactly conserved.
-        const clamped = Math.max(
-          -(before - minBefore),
-          Math.min(deltaFraction, after - minAfter),
-        );
+        const clamped = Math.max(-(before - minBefore), Math.min(deltaFraction, after - minAfter));
 
         next[dividerIndex] = before + clamped;
         next[dividerIndex + 1] = after - clamped;
@@ -189,7 +186,11 @@ export function SplitPane({ direction, panes, storageKey, className }: SplitPane
   return (
     <div
       ref={containerRef}
-      className={cn("flex h-full w-full overflow-hidden", isHorizontal ? "flex-row" : "flex-col", className)}
+      className={cn(
+        "flex h-full w-full overflow-hidden",
+        isHorizontal ? "flex-row" : "flex-col",
+        className,
+      )}
     >
       {panes.map((pane, index) => (
         <Fragment key={pane.id}>
@@ -209,16 +210,12 @@ export function SplitPane({ direction, panes, storageKey, className }: SplitPane
               onPointerDown={(event) => handlePointerDown(index, event)}
               onKeyDown={(event) => handleKeyDown(index, event)}
               className={cn(
-                "relative z-10 shrink-0 bg-border-subtle transition-colors duration-fast",
+                "bg-border-subtle duration-fast relative z-10 shrink-0 transition-colors",
                 "hover:bg-accent focus-visible:bg-accent focus-visible:outline-none",
                 draggingIndex === index && "bg-accent",
                 isHorizontal ? "cursor-col-resize" : "cursor-row-resize",
               )}
-              style={
-                isHorizontal
-                  ? { width: DIVIDER_THICKNESS }
-                  : { height: DIVIDER_THICKNESS }
-              }
+              style={isHorizontal ? { width: DIVIDER_THICKNESS } : { height: DIVIDER_THICKNESS }}
             >
               {/* Widens the grab target without widening the visible line. */}
               <span

@@ -111,11 +111,7 @@ export interface ClipHit {
  *
  * Iterates in reverse so the topmost clip wins, matching what the user sees.
  */
-export function hitTestClip(
-  x: number,
-  y: number,
-  rects: readonly ClipRect[],
-): ClipHit | null {
+export function hitTestClip(x: number, y: number, rects: readonly ClipRect[]): ClipHit | null {
   for (let index = rects.length - 1; index >= 0; index -= 1) {
     const rect = rects[index];
     if (!rect) continue;

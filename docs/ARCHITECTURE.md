@@ -24,13 +24,13 @@ that what you export matches what you previewed.
 
 Dependencies point **downward only**. A cycle here is a bug, not a style issue.
 
-| Layer | Packages | Constraint |
-| --- | --- | --- |
-| Domain | `types`, `utils` | Zero dependencies. Pure TS. No React, no DOM. |
-| Engines | `timeline-engine`, `animation-engine`, `mask-engine`, `color-engine`, `effects-engine`, `history-engine`, `caption-engine` | Pure logic and math. No React, no canvas. Runs in Node. |
-| Adapters | `media-engine`, `render-engine`, `export-engine` | Browser APIs live here, behind interfaces. |
-| Presentation | `ui`, `hooks`, `apps/web` | React. Owns no business logic. |
-| Extension | `plugin-sdk` | A frozen, versioned re-export of the layers above. |
+| Layer        | Packages                                                                                                                   | Constraint                                              |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Domain       | `types`, `utils`                                                                                                           | Zero dependencies. Pure TS. No React, no DOM.           |
+| Engines      | `timeline-engine`, `animation-engine`, `mask-engine`, `color-engine`, `effects-engine`, `history-engine`, `caption-engine` | Pure logic and math. No React, no canvas. Runs in Node. |
+| Adapters     | `media-engine`, `render-engine`, `export-engine`                                                                           | Browser APIs live here, behind interfaces.              |
+| Presentation | `ui`, `hooks`, `apps/web`                                                                                                  | React. Owns no business logic.                          |
+| Extension    | `plugin-sdk`                                                                                                               | A frozen, versioned re-export of the layers above.      |
 
 **Why engines must not import React:** it makes the export path runnable
 headless in Node with no refactor, and it makes timeline logic testable in
@@ -97,7 +97,7 @@ panel builds itself and plugin authors write no UI code.
 realtime preview and the headless exporter both consume it, so there is exactly
 one implementation of "what does frame N look like".
 
-Backends decide *how* to draw. **PixiJS (WebGL)** is the preview backend, because
+Backends decide _how_ to draw. **PixiJS (WebGL)** is the preview backend, because
 color grading, blur, and masks are shader problems. React Konva is reserved for
 the mask pen-tool overlay, where vector editing UI is genuinely its strength.
 
@@ -136,7 +136,7 @@ Two rules make this work:
 - **Audio is scheduled ahead on the clock**, not started by a timer, so a clip
   begins on exactly its frame rather than whenever a callback happened to fire.
 
-`requestAnimationFrame` decides *when to repaint*. It never decides where the
+`requestAnimationFrame` decides _when to repaint_. It never decides where the
 playhead is. And because rAF does not fire in a hidden tab while scheduled audio
 keeps sounding, the loop falls back to a timer when the document is hidden —
 otherwise a backgrounded timeline would play to the end and never notice it had
@@ -165,9 +165,9 @@ Recorded here so they are not silently relitigated:
 - **Commands, not `setState`.** Every mutation is a `Command` with
   `apply`/`invert`. Undo/redo falls out for free, and so — later — do macros,
   scripting, and multiplayer.
-- **Audio clock is the master clock.** *(Implemented.)* See below.
+- **Audio clock is the master clock.** _(Implemented.)_ See below.
 - **Timeline renders to canvas, not DOM.** DOM timelines degrade badly past
-  roughly 200 clips. *(Implemented.)*
+  roughly 200 clips. _(Implemented.)_
 
 ## Local-first, always
 

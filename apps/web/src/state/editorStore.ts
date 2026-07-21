@@ -312,7 +312,9 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       // a new track per file.
       let target = trackOrder
         .map((id) => tracks[id])
-        .find((track): track is Track => Boolean(track) && track.kind === wantedKind && !track.locked);
+        .find(
+          (track): track is Track => Boolean(track) && track.kind === wantedKind && !track.locked,
+        );
 
       if (!target) {
         target = createTrack({ kind: wantedKind, index: trackOrder.length });

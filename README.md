@@ -44,13 +44,13 @@ The editor is a pure function of a JSON document. Preview and export walk the
 
 Dependencies point downward only:
 
-| Layer | Packages | Constraint |
-| --- | --- | --- |
-| Domain | `types`, `utils` | Zero dependencies, pure TS |
-| Engines | `timeline-engine`, … | Pure logic — no React, no DOM |
-| Adapters | `media-engine`, `render-engine`, `export-engine` | Browser APIs, behind interfaces |
-| Presentation | `ui`, `web` | React — owns no business logic |
-| Extension | `plugin-sdk` | Frozen re-export of the above |
+| Layer        | Packages                                         | Constraint                      |
+| ------------ | ------------------------------------------------ | ------------------------------- |
+| Domain       | `types`, `utils`                                 | Zero dependencies, pure TS      |
+| Engines      | `timeline-engine`, …                             | Pure logic — no React, no DOM   |
+| Adapters     | `media-engine`, `render-engine`, `export-engine` | Browser APIs, behind interfaces |
+| Presentation | `ui`, `web`                                      | React — owns no business logic  |
+| Extension    | `plugin-sdk`                                     | Frozen re-export of the above   |
 
 Engines never import React. That is what makes the export path runnable headless
 in Node and keeps the timeline test suite running in milliseconds.
@@ -93,16 +93,16 @@ pnpm build       # production build
 
 ### Shortcuts
 
-| Key | Action |
-| --- | --- |
-| `Space` | Play / pause |
-| `←` / `→` | Step one frame (`Shift` for ten) |
-| `S` | Split at playhead |
-| `N` | Toggle snapping |
-| `Delete` | Ripple delete selection |
-| `Cmd/Ctrl` + `S` | Save now |
-| `+` / `-` | Zoom timeline |
-| `Home` / `End` | Jump to start / end |
+| Key              | Action                           |
+| ---------------- | -------------------------------- |
+| `Space`          | Play / pause                     |
+| `←` / `→`        | Step one frame (`Shift` for ten) |
+| `S`              | Split at playhead                |
+| `N`              | Toggle snapping                  |
+| `Delete`         | Ripple delete selection          |
+| `Cmd/Ctrl` + `S` | Save now                         |
+| `+` / `-`        | Zoom timeline                    |
+| `Home` / `End`   | Jump to start / end              |
 
 ## Contributing
 

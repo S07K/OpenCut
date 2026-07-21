@@ -42,7 +42,10 @@ export function computePeaks(samples: Float32Array, resolution: number): Wavefor
     // Guaranteed to advance at least one sample, so no bucket is ever empty
     // when there is data — an empty bucket would render as a gap in the middle
     // of continuous audio.
-    const end = Math.max(start + 1, Math.min(samples.length, Math.floor((bucket + 1) * samplesPerBucket)));
+    const end = Math.max(
+      start + 1,
+      Math.min(samples.length, Math.floor((bucket + 1) * samplesPerBucket)),
+    );
 
     let bucketMin = Infinity;
     let bucketMax = -Infinity;

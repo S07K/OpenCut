@@ -155,7 +155,9 @@ export interface CreateTrackOptions {
 export function createTrack(options: CreateTrackOptions): Track {
   return {
     id: options.id ?? createId("track"),
-    name: options.name ?? `${options.kind.charAt(0).toUpperCase()}${options.kind.slice(1)} ${options.index + 1}`,
+    name:
+      options.name ??
+      `${options.kind.charAt(0).toUpperCase()}${options.kind.slice(1)} ${options.index + 1}`,
     kind: options.kind,
     index: options.index,
     locked: false,

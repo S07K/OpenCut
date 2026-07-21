@@ -35,10 +35,7 @@ export interface SerializeOptions {
   pretty?: boolean;
 }
 
-export function serializeProject(
-  project: ProjectDocument,
-  options: SerializeOptions = {},
-): string {
+export function serializeProject(project: ProjectDocument, options: SerializeOptions = {}): string {
   const file: ProjectFile = {
     magic: PROJECT_FILE_MAGIC,
     fileVersion: FILE_VERSION,
@@ -51,7 +48,13 @@ export function serializeProject(
 }
 
 export type ParseResult =
-  | { ok: true; project: ProjectDocument; issues: ValidationIssue[]; migrations: string[]; fromFuture: boolean }
+  | {
+      ok: true;
+      project: ProjectDocument;
+      issues: ValidationIssue[];
+      migrations: string[];
+      fromFuture: boolean;
+    }
   | { ok: false; error: string };
 
 /**
@@ -78,8 +81,7 @@ export function parseProjectFile(contents: string): ParseResult {
 
   // Accept a bare document too. Users hand-edit and paste these around, and
   // refusing a valid document for lacking an envelope would be pedantry.
-  const rawProject: unknown =
-    envelope.magic === PROJECT_FILE_MAGIC ? envelope.project : parsed;
+  const rawProject: unknown = envelope.magic === PROJECT_FILE_MAGIC ? envelope.project : parsed;
 
   if (envelope.magic !== undefined && envelope.magic !== PROJECT_FILE_MAGIC) {
     return { ok: false, error: "File is not an OpenCut project." };

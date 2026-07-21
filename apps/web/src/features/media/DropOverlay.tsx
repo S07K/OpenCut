@@ -69,11 +69,11 @@ export function DropOverlay() {
   if (!isDragging) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-canvas/80 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-accent px-12 py-10">
+    <div className="bg-canvas/80 pointer-events-none fixed inset-0 z-50 grid place-items-center backdrop-blur-sm">
+      <div className="border-accent flex flex-col items-center gap-3 rounded-lg border-2 border-dashed px-12 py-10">
         <Upload size={28} className="text-accent" />
-        <p className="text-md font-medium text-text-primary">Drop to import</p>
-        <p className="text-xs text-text-tertiary">
+        <p className="text-md text-text-primary font-medium">Drop to import</p>
+        <p className="text-text-tertiary text-xs">
           Video, audio, and images — stored locally, never uploaded
         </p>
       </div>

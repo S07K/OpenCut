@@ -37,8 +37,8 @@ export function Button({
     <button
       className={cn(
         "inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap",
-        "transition-colors duration-fast",
-        "focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none",
+        "duration-fast transition-colors",
+        "focus-visible:ring-accent focus-visible:ring-2 focus-visible:outline-none",
         "disabled:pointer-events-none disabled:opacity-40",
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
@@ -76,8 +76,8 @@ export function IconButton({
       aria-pressed={active}
       className={cn(
         "inline-flex shrink-0 items-center justify-center",
-        "transition-colors duration-fast",
-        "focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none",
+        "duration-fast transition-colors",
+        "focus-visible:ring-accent focus-visible:ring-2 focus-visible:outline-none",
         "disabled:pointer-events-none disabled:opacity-40",
         VARIANT_CLASSES[variant],
         size === "sm" ? "h-6 w-6 rounded-xs" : "h-8 w-8 rounded-sm",

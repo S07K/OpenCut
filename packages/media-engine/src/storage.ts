@@ -77,9 +77,7 @@ export class IndexedDBMediaStore implements MediaBlobStore {
   }
 
   async get(key: string): Promise<Blob | null> {
-    const result = await this.transaction<Blob | undefined>("readonly", (store) =>
-      store.get(key),
-    );
+    const result = await this.transaction<Blob | undefined>("readonly", (store) => store.get(key));
     return result ?? null;
   }
 
@@ -88,9 +86,7 @@ export class IndexedDBMediaStore implements MediaBlobStore {
   }
 
   async keys(): Promise<string[]> {
-    const result = await this.transaction<IDBValidKey[]>("readonly", (store) =>
-      store.getAllKeys(),
-    );
+    const result = await this.transaction<IDBValidKey[]>("readonly", (store) => store.getAllKeys());
     return result.map(String);
   }
 

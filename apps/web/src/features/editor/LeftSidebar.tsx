@@ -44,7 +44,7 @@ export function LeftSidebar() {
     <div className="flex h-full">
       <nav
         aria-label="Editor sections"
-        className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border-subtle bg-surface-base py-2"
+        className="border-border-subtle bg-surface-base flex w-12 shrink-0 flex-col items-center gap-1 border-r py-2"
       >
         {SECTIONS.map((section) => {
           const Icon = section.icon;
@@ -57,8 +57,8 @@ export function LeftSidebar() {
               aria-current={isActive}
               title={section.label}
               className={cn(
-                "grid h-9 w-9 place-items-center rounded-sm transition-colors duration-fast",
-                "focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none",
+                "duration-fast grid h-9 w-9 place-items-center rounded-sm transition-colors",
+                "focus-visible:ring-accent focus-visible:ring-2 focus-visible:outline-none",
                 isActive
                   ? "bg-accent-muted text-accent"
                   : "text-text-tertiary hover:bg-surface-raised hover:text-text-primary",
@@ -83,8 +83,8 @@ export function LeftSidebar() {
 function EmptySection({ label }: { label: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-1 p-6 text-center">
-      <p className="text-sm text-text-secondary">{label}</p>
-      <p className="text-xs text-text-tertiary">Coming in a later milestone.</p>
+      <p className="text-text-secondary text-sm">{label}</p>
+      <p className="text-text-tertiary text-xs">Coming in a later milestone.</p>
     </div>
   );
 }

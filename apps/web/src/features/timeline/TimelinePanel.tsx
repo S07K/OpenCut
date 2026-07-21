@@ -20,20 +20,15 @@ export function TimelinePanel() {
   const deleteSelected = useEditorStore((state) => state.deleteSelected);
 
   return (
-    <Panel
-      bare
-      className="border-t border-border-subtle"
-    >
+    <Panel bare className="border-border-subtle border-t">
       <div className="flex h-full flex-col">
-        <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border-subtle px-2">
-          <span className="tabular text-sm text-text-primary">
-            {formatTimecode(playhead, fps)}
-          </span>
-          <span className="tabular text-xs text-text-tertiary">
+        <div className="border-border-subtle flex h-9 shrink-0 items-center gap-1 border-b px-2">
+          <span className="tabular text-text-primary text-sm">{formatTimecode(playhead, fps)}</span>
+          <span className="tabular text-text-tertiary text-xs">
             / {formatTimecode(duration, fps)}
           </span>
 
-          <div className="mx-2 h-4 w-px bg-border-subtle" />
+          <div className="bg-border-subtle mx-2 h-4 w-px" />
 
           <IconButton size="sm" label="Split at playhead (S)" onClick={splitAtPlayhead}>
             <Scissors size={14} />
@@ -58,9 +53,7 @@ export function TimelinePanel() {
           <div className="flex-1" />
 
           {selectionCount > 0 && (
-            <span className="mr-2 text-xs text-text-tertiary">
-              {selectionCount} selected
-            </span>
+            <span className="text-text-tertiary mr-2 text-xs">{selectionCount} selected</span>
           )}
 
           <IconButton size="sm" label="Zoom out" onClick={() => zoomBy(1 / 1.3)}>

@@ -15,7 +15,7 @@ export function SaveIndicator() {
 
   if (saveState === "unavailable") {
     return (
-      <span className="flex items-center gap-1 text-warning">
+      <span className="text-warning flex items-center gap-1">
         <CloudOff size={11} />
         Storage unavailable — changes will be lost
       </span>
@@ -24,7 +24,7 @@ export function SaveIndicator() {
 
   if (saveState === "error") {
     return (
-      <span className="flex items-center gap-1 text-danger">
+      <span className="text-danger flex items-center gap-1">
         <AlertTriangle size={11} />
         Could not save
       </span>

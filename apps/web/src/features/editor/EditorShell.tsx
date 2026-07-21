@@ -28,64 +28,63 @@ import { LoadIssuesBanner } from "@/features/project/LoadIssuesBanner";
  * component boundaries here do not have to change.
  */
 export function EditorShell() {
-
   return (
     <MediaImportProvider>
       <ProjectProvider>
-      <EditorKeyboard />
-      <div className="flex h-full w-full flex-col overflow-hidden">
-        <TopToolbar />
+        <EditorKeyboard />
+        <div className="flex h-full w-full flex-col overflow-hidden">
+          <TopToolbar />
 
-        <div className="min-h-0 flex-1">
-          <SplitPane
-            direction="vertical"
-            storageKey="root"
-          panes={[
-            {
-              id: "workspace",
-              defaultSize: 0.62,
-              minSize: 220,
-              content: (
-                <SplitPane
-                  direction="horizontal"
-                  storageKey="workspace"
-                  panes={[
-                    {
-                      id: "left",
-                      defaultSize: 0.2,
-                      minSize: 220,
-                      content: <LeftSidebar />,
-                    },
-                    {
-                      id: "center",
-                      defaultSize: 0.56,
-                      minSize: 320,
-                      content: <PreviewPanel />,
-                    },
-                    {
-                      id: "right",
-                      defaultSize: 0.24,
-                      minSize: 240,
-                      content: <RightSidebar />,
-                    },
-                  ]}
-                />
-              ),
-            },
-            {
-              id: "timeline",
-              defaultSize: 0.38,
-              minSize: 180,
-              content: <TimelinePanel />,
-            },
-            ]}
-          />
+          <div className="min-h-0 flex-1">
+            <SplitPane
+              direction="vertical"
+              storageKey="root"
+              panes={[
+                {
+                  id: "workspace",
+                  defaultSize: 0.62,
+                  minSize: 220,
+                  content: (
+                    <SplitPane
+                      direction="horizontal"
+                      storageKey="workspace"
+                      panes={[
+                        {
+                          id: "left",
+                          defaultSize: 0.2,
+                          minSize: 220,
+                          content: <LeftSidebar />,
+                        },
+                        {
+                          id: "center",
+                          defaultSize: 0.56,
+                          minSize: 320,
+                          content: <PreviewPanel />,
+                        },
+                        {
+                          id: "right",
+                          defaultSize: 0.24,
+                          minSize: 240,
+                          content: <RightSidebar />,
+                        },
+                      ]}
+                    />
+                  ),
+                },
+                {
+                  id: "timeline",
+                  defaultSize: 0.38,
+                  minSize: 180,
+                  content: <TimelinePanel />,
+                },
+              ]}
+            />
+          </div>
+
+          <StatusBar />
+          <DropOverlay />
+          <LoadIssuesBanner />
         </div>
-
-        <StatusBar />
-        <DropOverlay />
-        <LoadIssuesBanner />
-      </div>
       </ProjectProvider>
     </MediaImportProvider>
   );

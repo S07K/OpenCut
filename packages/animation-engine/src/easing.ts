@@ -32,11 +32,7 @@ function bezierAxis(t: number, a: number, b: number): number {
 
 function bezierAxisDerivative(t: number, a: number, b: number): number {
   const inverse = 1 - t;
-  return (
-    3 * inverse * inverse * a +
-    6 * inverse * t * (b - a) +
-    3 * t * t * (1 - b)
-  );
+  return 3 * inverse * inverse * a + 6 * inverse * t * (b - a) + 3 * t * t * (1 - b);
 }
 
 const BEZIER_ITERATIONS = 8;
@@ -109,8 +105,7 @@ export function spring(t: number, stiffness: number, damping: number, mass: numb
       1 -
       decay *
         (Math.cos(dampedFrequency * time) +
-          ((dampingRatio * angularFrequency) / dampedFrequency) *
-            Math.sin(dampedFrequency * time))
+          ((dampingRatio * angularFrequency) / dampedFrequency) * Math.sin(dampedFrequency * time))
     );
   }
 

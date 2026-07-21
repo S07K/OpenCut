@@ -26,6 +26,15 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
   const rendererRef = useRef<PixiSceneRenderer | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  /**
+   * Probed once, lazily, rather than inside the init effect.
+   *
+   * Doing it in the effect would mean a synchronous `setState` during an
+   * effect body, which cascades an extra render. Safe as a state initializer
+   * because the parent only mounts this component after measuring a non-zero
+   * size, so it never runs during server rendering.
+   */
+  const [webglSupport] = useState(probeWebGLSupport);
   /** Bumped when an async texture finishes, to force a redraw. */
   const [textureEpoch, setTextureEpoch] = useState(0);
   /** Bumped when a lost WebGL context is restored, to rebuild the renderer. */
@@ -73,11 +82,7 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const support = probeWebGLSupport();
-    if (!support.supported) {
-      setInitError(support.reason);
-      return;
-    }
+    if (!webglSupport.supported) return;
 
     const cache = new MediaTextureCache(store());
     const renderer = new PixiSceneRenderer(cache);
@@ -120,7 +125,7 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
     // Mount-only by design: resizing is handled below rather than by rebuilding
     // the WebGL context, which would drop every uploaded texture.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store, contextEpoch]);
+  }, [store, contextEpoch, webglSupport]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -136,18 +141,19 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
     rendererRef.current?.render(scene, project.entities.media, width, isPlaying);
   }, [isReady, project, playhead, isPlaying, width, height, textureEpoch]);
 
+  // Context loss (runtime) takes precedence over an unsupported probe result.
+  const displayError = initError ?? (webglSupport.supported ? null : webglSupport.reason);
+
   return (
     <>
       <canvas
         ref={canvasRef}
         className="absolute inset-0 h-full w-full"
-        style={{ width, height, visibility: initError ? "hidden" : "visible" }}
+        style={{ width, height, visibility: displayError ? "hidden" : "visible" }}
       />
-      {initError && (
+      {displayError && (
         <div className="absolute inset-0 grid place-items-center p-4 text-center">
-          <p className="text-xs text-danger">
-            Preview renderer unavailable: {initError}
-          </p>
+          <p className="text-danger text-xs">Preview renderer unavailable: {displayError}</p>
         </div>
       )}
     </>

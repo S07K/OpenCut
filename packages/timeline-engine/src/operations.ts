@@ -115,9 +115,7 @@ export function rippleDelete(trackClips: readonly Clip[], clipId: Id): Clip[] {
   const gap = target.durationFrames;
   return trackClips
     .filter((c) => c.id !== clipId)
-    .map((c) =>
-      c.startFrame >= target.startFrame ? { ...c, startFrame: c.startFrame - gap } : c,
-    )
+    .map((c) => (c.startFrame >= target.startFrame ? { ...c, startFrame: c.startFrame - gap } : c))
     .sort((a, b) => a.startFrame - b.startFrame);
 }
 
@@ -158,6 +156,8 @@ export function clipsInRange(
   end: Frame,
 ): Clip[] {
   return clips
-    .filter((c) => c.trackId === trackId && c.startFrame < end && c.startFrame + c.durationFrames > start)
+    .filter(
+      (c) => c.trackId === trackId && c.startFrame < end && c.startFrame + c.durationFrames > start,
+    )
     .sort((a, b) => a.startFrame - b.startFrame);
 }

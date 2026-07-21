@@ -47,11 +47,11 @@ export function PreviewPanel() {
   })();
 
   return (
-    <div className="flex h-full flex-col bg-surface-base">
-      <div ref={containerRef} className="relative min-h-0 flex-1 bg-canvas">
+    <div className="bg-surface-base flex h-full flex-col">
+      <div ref={containerRef} className="bg-canvas relative min-h-0 flex-1">
         <div className="absolute inset-0 grid place-items-center">
           <div
-            className="relative shadow-panel"
+            className="shadow-panel relative"
             style={{
               width: stageSize.width,
               height: stageSize.height,
@@ -67,8 +67,8 @@ export function PreviewPanel() {
         </div>
       </div>
 
-      <div className="flex h-11 shrink-0 items-center gap-1 border-t border-border-subtle bg-surface-panel px-3">
-        <span className="tabular w-24 text-sm text-text-primary">
+      <div className="border-border-subtle bg-surface-panel flex h-11 shrink-0 items-center gap-1 border-t px-3">
+        <span className="tabular text-text-primary w-24 text-sm">
           {formatTimecode(playhead, fps)}
         </span>
 

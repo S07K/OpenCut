@@ -11,7 +11,8 @@
 import type { Frame, Unit, Vec2 } from "./primitives";
 
 /** Interpolation applied on the segment *leaving* a keyframe. */
-export type EasingKind = "hold" | "linear" | "ease-in" | "ease-out" | "ease-in-out" | "bezier" | "spring";
+export type EasingKind =
+  "hold" | "linear" | "ease-in" | "ease-out" | "ease-in-out" | "bezier" | "spring";
 
 /**
  * A cubic-bezier timing curve, expressed as its two control points.

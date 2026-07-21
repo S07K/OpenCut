@@ -11,22 +11,22 @@ export function TopToolbar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const projectInputRef = useRef<HTMLInputElement>(null);
   const { importFromFiles, isImporting } = useMediaImportContext();
-  const { saveNow, downloadProject, openProjectFile } = useProject();
+  const { downloadProject, openProjectFile } = useProject();
   const projectName = useEditorStore((state) => state.project.name);
   const resolution = useEditorStore((state) => state.project.settings.resolution);
   const fps = useEditorStore((state) => state.project.settings.frameRate);
   const renameProject = useEditorStore((state) => state.renameProject);
 
   return (
-    <header className="flex h-(--size-toolbar-height) shrink-0 items-center gap-1 border-b border-border-subtle bg-surface-panel px-3">
+    <header className="border-border-subtle bg-surface-panel flex h-(--size-toolbar-height) shrink-0 items-center gap-1 border-b px-3">
       <div className="flex items-center gap-2 pr-2">
-        <div className="grid h-6 w-6 place-items-center rounded-sm bg-accent text-xs font-bold text-accent-text">
+        <div className="bg-accent text-accent-text grid h-6 w-6 place-items-center rounded-sm text-xs font-bold">
           O
         </div>
-        <span className="text-sm font-semibold text-text-primary">OpenCut</span>
+        <span className="text-text-primary text-sm font-semibold">OpenCut</span>
       </div>
 
-      <div className="mx-1 h-5 w-px bg-border-subtle" />
+      <div className="bg-border-subtle mx-1 h-5 w-px" />
 
       <Button
         size="sm"
@@ -65,7 +65,7 @@ export function TopToolbar() {
             aria-label="Project name"
             value={projectName}
             onChange={(event) => renameProject(event.target.value)}
-            className="w-48 rounded-xs bg-transparent px-1 text-center text-xs font-medium text-text-primary hover:bg-surface-raised focus:bg-surface-input focus:outline-none"
+            className="text-text-primary hover:bg-surface-raised focus:bg-surface-input w-48 rounded-xs bg-transparent px-1 text-center text-xs font-medium focus:outline-none"
           />
           <span className="tabular text-text-tertiary">
             {resolution.width}×{resolution.height} · {fps}fps

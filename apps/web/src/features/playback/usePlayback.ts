@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { startPlayback, tick, type TransportBounds, type TransportOrigin } from "@opencut/playback-engine";
+import {
+  startPlayback,
+  tick,
+  type TransportBounds,
+  type TransportOrigin,
+} from "@opencut/playback-engine";
 import { AudioEngine } from "./AudioEngine";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
 import { useEditorStore } from "@/state/editorStore";

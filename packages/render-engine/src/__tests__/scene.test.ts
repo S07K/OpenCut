@@ -113,9 +113,9 @@ describe("resolveScene", () => {
     });
 
     expect(resolveScene(projectWith([hiddenTrack], [clip]), 5).nodes).toHaveLength(0);
-    expect(
-      resolveScene(projectWith([track], [{ ...clip, hidden: true }]), 5).nodes,
-    ).toHaveLength(0);
+    expect(resolveScene(projectWith([track], [{ ...clip, hidden: true }]), 5).nodes).toHaveLength(
+      0,
+    );
   });
 
   it("collects audio separately from visual nodes", () => {
@@ -145,9 +145,7 @@ describe("resolveScene", () => {
     });
 
     // Clip volume 0.5 * track volume 0.5.
-    expect(resolveScene(projectWith([audioTrack], [clip]), 10).audio[0]!.volume).toBeCloseTo(
-      0.25,
-    );
+    expect(resolveScene(projectWith([audioTrack], [clip]), 10).audio[0]!.volume).toBeCloseTo(0.25);
   });
 
   it("silences muted audio tracks", () => {

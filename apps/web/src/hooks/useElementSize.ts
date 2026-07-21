@@ -23,9 +23,7 @@ export interface ElementSize {
  * So: measure immediately, again after layout settles, on window resize, and
  * via `ResizeObserver` where it actually works. Redundant on purpose.
  */
-export function useElementSize<T extends HTMLElement>(
-  ref: RefObject<T | null>,
-): ElementSize {
+export function useElementSize<T extends HTMLElement>(ref: RefObject<T | null>): ElementSize {
   const [size, setSize] = useState<ElementSize>({ width: 0, height: 0 });
   // Avoids re-rendering when a measurement matches what we already have; this
   // runs on every resize frame.

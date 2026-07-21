@@ -53,11 +53,7 @@ export function resolveRange(bounds: TransportBounds): { start: number; end: num
  * wants an integer, but audio scheduling needs sub-frame precision, and
  * rounding here would throw that away irrecoverably.
  */
-export function frameAt(
-  origin: TransportOrigin,
-  nowSeconds: number,
-  frameRate: number,
-): number {
+export function frameAt(origin: TransportOrigin, nowSeconds: number, frameRate: number): number {
   const elapsed = Math.max(0, nowSeconds - origin.startedAtSeconds);
   return origin.startFrame + elapsed * frameRate * origin.rate;
 }

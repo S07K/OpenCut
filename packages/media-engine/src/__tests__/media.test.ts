@@ -111,13 +111,8 @@ describe("mixToMono", () => {
 
 describe("waveform serialization", () => {
   it("round-trips through JSON", () => {
-    const original = computePeaks(
-      Float32Array.from([0.2, -0.6, 0.9, -0.1, 0.4]),
-      4,
-    );
-    const restored = deserializeWaveform(
-      JSON.parse(JSON.stringify(serializeWaveform(original))),
-    );
+    const original = computePeaks(Float32Array.from([0.2, -0.6, 0.9, -0.1, 0.4]), 4);
+    const restored = deserializeWaveform(JSON.parse(JSON.stringify(serializeWaveform(original))));
 
     expect(Array.from(restored.min)).toEqual(Array.from(original.min));
     expect(Array.from(restored.max)).toEqual(Array.from(original.max));

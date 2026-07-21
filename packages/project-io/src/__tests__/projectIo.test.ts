@@ -272,7 +272,11 @@ describe("serialization safety", () => {
                 type: "animated",
                 keyframes: [
                   { frame: 0, value: 0, easing: { kind: "linear" } },
-                  { frame: 30, value: 1, easing: { kind: "spring", stiffness: 180, damping: 12, mass: 1 } },
+                  {
+                    frame: 30,
+                    value: 1,
+                    easing: { kind: "spring", stiffness: 180, damping: 12, mass: 1 },
+                  },
                 ],
               },
             },

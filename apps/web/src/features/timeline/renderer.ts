@@ -234,7 +234,7 @@ function drawClip(
     ctx.fillStyle = theme.clipText;
     // Canvas `font` does not resolve CSS custom properties — it needs a
     // literal family list, so the token cannot be reused here.
-    ctx.font = '500 11px Inter, system-ui, sans-serif';
+    ctx.font = "500 11px Inter, system-ui, sans-serif";
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
     ctx.fillText(clip.name, x + 6, y + 5);

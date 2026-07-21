@@ -17,11 +17,7 @@ import {
 } from "./geometry";
 import { readTheme, renderTimeline, type TimelineTheme } from "./renderer";
 import { useElementSize } from "@/hooks/useElementSize";
-import {
-  selectClipsArray,
-  selectOrderedTracks,
-  useEditorStore,
-} from "@/state/editorStore";
+import { selectClipsArray, selectOrderedTracks, useEditorStore } from "@/state/editorStore";
 
 /**
  * The canvas timeline.
@@ -338,7 +334,7 @@ export function TimelineCanvas() {
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden bg-surface-base"
+      className="bg-surface-base relative h-full w-full overflow-hidden"
       style={{ minHeight: contentHeight }}
     >
       <canvas

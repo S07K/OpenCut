@@ -51,7 +51,11 @@ export class MediaTextureCache {
    * Returns `null` when the media cannot be resolved — a missing asset must
    * degrade to an empty frame, never crash the render loop.
    */
-  async load(mediaId: Id, blobKey: string, kind: "video" | "image" | "gif"): Promise<Texture | null> {
+  async load(
+    mediaId: Id,
+    blobKey: string,
+    kind: "video" | "image" | "gif",
+  ): Promise<Texture | null> {
     const cached = this.entries.get(mediaId);
     if (cached) return cached.texture;
 

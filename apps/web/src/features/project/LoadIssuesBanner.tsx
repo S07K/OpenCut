@@ -18,12 +18,12 @@ export function LoadIssuesBanner() {
 
   return (
     <div className="absolute bottom-10 left-1/2 z-40 w-[min(560px,90vw)] -translate-x-1/2">
-      <div className="rounded-md border border-warning/40 bg-surface-overlay p-3 shadow-popover">
+      <div className="border-warning/40 bg-surface-overlay shadow-popover rounded-md border p-3">
         <div className="flex items-start gap-2">
-          <AlertTriangle size={14} className="mt-0.5 shrink-0 text-warning" />
+          <AlertTriangle size={14} className="text-warning mt-0.5 shrink-0" />
 
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-text-primary">
+            <p className="text-text-primary text-xs font-medium">
               Project opened with {loadIssues.length} issue
               {loadIssues.length === 1 ? "" : "s"}
             </p>
@@ -39,7 +39,7 @@ export function LoadIssuesBanner() {
           <button
             onClick={dismissIssues}
             aria-label="Dismiss"
-            className="shrink-0 rounded-xs p-0.5 text-text-tertiary hover:text-text-primary"
+            className="text-text-tertiary hover:text-text-primary shrink-0 rounded-xs p-0.5"
           >
             <X size={13} />
           </button>

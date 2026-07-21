@@ -117,7 +117,8 @@ export class PixiSceneRenderer {
     // the children array is authoritative.
     scene.nodes.forEach((node, index) => {
       const container = this.nodes.get(node.clipId);
-      if (container) this.root.setChildIndex(container, Math.min(index, this.root.children.length - 1));
+      if (container)
+        this.root.setChildIndex(container, Math.min(index, this.root.children.length - 1));
     });
 
     this.app.renderer.render(this.app.stage);
@@ -138,10 +139,7 @@ export class PixiSceneRenderer {
     this.updateContent(container, node, assets);
   }
 
-  private createDisplayObject(
-    node: SceneNode,
-    assets: Record<Id, MediaAsset>,
-  ): Container | null {
+  private createDisplayObject(node: SceneNode, assets: Record<Id, MediaAsset>): Container | null {
     switch (node.content.kind) {
       case "media": {
         const texture = this.cache.peek(node.content.mediaId);
@@ -229,10 +227,7 @@ export class PixiSceneRenderer {
       // Graphics has no anchor; approximate by offsetting the pivot to its
       // measured bounds so rotation still happens about the intended point.
       const bounds = container.getLocalBounds();
-      container.pivot.set(
-        bounds.width * transform.anchor.x,
-        bounds.height * transform.anchor.y,
-      );
+      container.pivot.set(bounds.width * transform.anchor.x, bounds.height * transform.anchor.y);
     }
   }
 
@@ -247,7 +242,8 @@ export class PixiSceneRenderer {
 
         const texture = this.cache.peek(node.content.mediaId);
         if (texture && container.texture !== texture) container.texture = texture;
-        else if (!texture) this.requestTexture(node.content.mediaId, node.content.mediaKind, assets);
+        else if (!texture)
+          this.requestTexture(node.content.mediaId, node.content.mediaKind, assets);
 
         if (node.content.mediaKind === "video") {
           this.syncVideoTime(node.content.mediaId, node.content.sourceTimeSeconds);

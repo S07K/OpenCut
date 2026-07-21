@@ -9,12 +9,7 @@
  * would be the worst possible outcome for someone with hours of work in it.
  */
 
-import type {
-  Clip,
-  MediaAsset,
-  ProjectDocument,
-  Track,
-} from "@opencut/types";
+import type { Clip, MediaAsset, ProjectDocument, Track } from "@opencut/types";
 import { createProject } from "@opencut/utils";
 
 export type IssueSeverity = "dropped" | "repaired";
@@ -108,10 +103,7 @@ export function validateProject(raw: unknown): ValidationResult {
   };
 }
 
-function validateSettings(
-  raw: unknown,
-  fallback: ProjectDocument,
-): ProjectDocument["settings"] {
+function validateSettings(raw: unknown, fallback: ProjectDocument): ProjectDocument["settings"] {
   if (!isRecord(raw)) return fallback.settings;
 
   const resolution = isRecord(raw.resolution) ? raw.resolution : {};

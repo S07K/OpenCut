@@ -176,11 +176,7 @@ export function sourceTimeFor(
   return (sourceInFrame + elapsed * speed) / frameRate;
 }
 
-function resolveContent(
-  clip: Clip,
-  frame: Frame,
-  frameRate: number,
-): ResolvedContent | null {
+function resolveContent(clip: Clip, frame: Frame, frameRate: number): ResolvedContent | null {
   const content: ClipContent = clip.content;
 
   switch (content.kind) {

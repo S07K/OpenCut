@@ -144,8 +144,7 @@ export class AudioEngine {
 
       // Remaining clip length, so a trimmed clip stops at its out point rather
       // than playing the rest of the source file.
-      const framesRemaining =
-        clip.durationFrames - Math.max(0, fromFrame - clip.startFrame);
+      const framesRemaining = clip.durationFrames - Math.max(0, fromFrame - clip.startFrame);
       const durationSeconds = (framesRemaining / frameRate) * clip.content.speed;
       if (durationSeconds <= 0) continue;
 
@@ -157,8 +156,7 @@ export class AudioEngine {
       // Clip volume is not animated here yet; the static value is read at
       // schedule time. Animated volume needs param automation, which lands with
       // the audio effects work.
-      const clipVolume =
-        clip.content.volume.type === "static" ? clip.content.volume.value : 1;
+      const clipVolume = clip.content.volume.type === "static" ? clip.content.volume.value : 1;
       gain.gain.value = clipVolume * track.volume;
 
       source.connect(gain).connect(context.destination);
