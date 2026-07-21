@@ -32,6 +32,9 @@ importers:
       '@opencut/animation-engine':
         specifier: workspace:*
         version: link:../../packages/animation-engine
+      '@opencut/history-engine':
+        specifier: workspace:*
+        version: link:../../packages/history-engine
       '@opencut/media-engine':
         specifier: workspace:*
         version: link:../../packages/media-engine
@@ -111,6 +114,12 @@ importers:
       '@opencut/types':
         specifier: workspace:*
         version: link:../types
+    devDependencies:
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.1)(lightningcss@1.32.0)
+
+  packages/history-engine:
     devDependencies:
       vitest:
         specifier: ^2.1.8

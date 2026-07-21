@@ -5,6 +5,19 @@ import type { Clip, Frame, Id, MediaAsset, ProjectDocument, Track } from "@openc
 import { computeDuration, moveClip, rippleDelete, splitClip } from "@opencut/timeline-engine";
 import { createClipForAsset, trackKindForAsset } from "@opencut/media-engine";
 import { createId, createProject, createTrack } from "@opencut/utils";
+import {
+  canRedo as historyCanRedo,
+  canUndo as historyCanUndo,
+  createHistory,
+  push as historyPush,
+  redo as historyRedo,
+  redoLabel as historyRedoLabel,
+  reset as historyReset,
+  seal as historySeal,
+  undo as historyUndo,
+  undoLabel as historyUndoLabel,
+  type History,
+} from "@opencut/history-engine";
 
 /**
  * Editor state.
@@ -18,9 +31,10 @@ import { createId, createProject, createTrack } from "@opencut/utils";
  *   the timeline" in their undo history, and nobody wants a merge conflict over
  *   where someone's playhead was.
  *
- * Mutations funnel through `updateProject`, which is the seam where the history
- * engine will attach in Phase 2 — at that point actions become Commands and
- * this store stops being the mutation authority.
+ * Every document mutation funnels through `commit`, which is what keeps the
+ * undo history complete. Writing to `project` directly anywhere in this file is
+ * a bug: the edit would be silently unundoable, and the history's snapshot would
+ * no longer match the live document.
  */
 
 /** Zoom bounds in pixels-per-frame. */
@@ -30,6 +44,7 @@ export const DEFAULT_PIXELS_PER_FRAME = 4;
 
 export interface EditorState {
   project: ProjectDocument;
+  history: History<ProjectDocument>;
 
   // --- Ephemeral view state ---
   playhead: Frame;
@@ -66,6 +81,15 @@ export interface EditorState {
   /** Swaps in a whole document, on project load or restore. */
   replaceProject: (project: ProjectDocument) => void;
   renameProject: (name: string) => void;
+
+  undo: () => void;
+  redo: () => void;
+  /** Closes the current gesture so the next one is a separate undo step. */
+  endGesture: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+  undoLabel: () => string | null;
+  redoLabel: () => string | null;
 }
 
 /** Recomputes derived document fields after any structural edit. */
@@ -77,10 +101,32 @@ function withDerived(project: ProjectDocument): ProjectDocument {
   };
 }
 
+/**
+ * Records a document change in both the live state and the undo history.
+ *
+ * `mergeKey` collapses a continuous gesture into one undo step — dragging a clip
+ * emits an update per pointer move, and without merging a single drag would cost
+ * sixty presses of Cmd+Z.
+ */
+function commit(
+  state: EditorState,
+  project: ProjectDocument,
+  label: string,
+  mergeKey?: string,
+): Pick<EditorState, "project" | "history"> {
+  return {
+    project,
+    history: historyPush(state.history, project, { label, mergeKey: mergeKey ?? null }),
+  };
+}
+
+const initialProject = createProject();
+
 export const useEditorStore = create<EditorState>()((set, get) => ({
   // Opens empty. No demo content, no sample project — import your footage and
   // start, which is the whole promise of the tool.
-  project: createProject(),
+  project: initialProject,
+  history: createHistory(initialProject, "New project"),
 
   playhead: 0,
   pixelsPerFrame: DEFAULT_PIXELS_PER_FRAME,
@@ -124,15 +170,18 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       if (!clip || clip.locked) return state;
 
       const moved = moveClip(clip, startFrame, trackId);
-      return {
-        project: withDerived({
+      return commit(
+        state,
+        withDerived({
           ...state.project,
           entities: {
             ...state.project.entities,
             clips: { ...state.project.entities.clips, [clipId]: moved },
           },
         }),
-      };
+        "Move clip",
+        `move:${clipId}`,
+      );
     }),
 
   splitAtPlayhead: () =>
@@ -164,12 +213,11 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
 
       if (!didSplit) return state;
 
-      return {
-        project: withDerived({
-          ...state.project,
-          entities: { ...state.project.entities, clips },
-        }),
-      };
+      return commit(
+        state,
+        withDerived({ ...state.project, entities: { ...state.project.entities, clips } }),
+        "Split clip",
+      );
     }),
 
   deleteSelected: () =>
@@ -201,10 +249,11 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
 
       return {
         selectedClipIds: [],
-        project: withDerived({
-          ...state.project,
-          entities: { ...state.project.entities, clips },
-        }),
+        ...commit(
+          state,
+          withDerived({ ...state.project, entities: { ...state.project.entities, clips } }),
+          "Delete clip",
+        ),
       };
     }),
 
@@ -214,23 +263,28 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       if (!track) return state;
 
       const updated: Track = { ...track, [flag]: value };
-      return {
-        project: {
+      return commit(
+        state,
+        {
           ...state.project,
           entities: {
             ...state.project.entities,
             tracks: { ...state.project.entities.tracks, [trackId]: updated },
           },
+          modifiedAt: Date.now(),
         },
-      };
+        `${value ? "Enable" : "Disable"} track ${flag}`,
+      );
     }),
 
   replaceProject: (project) =>
     // View state is reset alongside the document: a playhead or selection
     // carried over from the previous project would point at clips that no
-    // longer exist.
+    // longer exist. History is discarded for the same reason — undoing across a
+    // document swap would resurrect clips from a project no longer open.
     set({
       project,
+      history: historyReset(project),
       playhead: 0,
       scrollFrame: 0,
       selectedClipIds: [],
@@ -238,9 +292,35 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
     }),
 
   renameProject: (name) =>
-    set((state) => ({
-      project: { ...state.project, name, modifiedAt: Date.now() },
-    })),
+    set((state) =>
+      // Merged, so typing a name is one undo step rather than one per keystroke.
+      commit(state, { ...state.project, name, modifiedAt: Date.now() }, "Rename project", "rename"),
+    ),
+
+  endGesture: () => set((state) => ({ history: historySeal(state.history) })),
+
+  undo: () =>
+    set((state) => {
+      if (!historyCanUndo(state.history)) return state;
+      const history = historyUndo(state.history);
+
+      // Selection is cleared rather than preserved: the clips it referenced may
+      // not exist in the restored document, and a selection pointing at missing
+      // ids breaks the properties panel.
+      return { history, project: history.present.state, selectedClipIds: [] };
+    }),
+
+  redo: () =>
+    set((state) => {
+      if (!historyCanRedo(state.history)) return state;
+      const history = historyRedo(state.history);
+      return { history, project: history.present.state, selectedClipIds: [] };
+    }),
+
+  canUndo: () => historyCanUndo(get().history),
+  canRedo: () => historyCanRedo(get().history),
+  undoLabel: () => historyUndoLabel(get().history),
+  redoLabel: () => historyRedoLabel(get().history),
 
   addMediaAssets: (assets) =>
     set((state) => {
@@ -249,13 +329,15 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       const media = { ...state.project.entities.media };
       for (const asset of assets) media[asset.id] = asset;
 
-      return {
-        project: {
+      return commit(
+        state,
+        {
           ...state.project,
           entities: { ...state.project.entities, media },
           modifiedAt: Date.now(),
         },
-      };
+        assets.length === 1 ? "Import media" : `Import ${assets.length} files`,
+      );
     }),
 
   upsertMediaAsset: (asset) =>
@@ -264,14 +346,24 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       // user removed the asset must not resurrect it.
       if (!state.project.entities.media[asset.id]) return state;
 
-      return {
-        project: {
-          ...state.project,
-          entities: {
-            ...state.project.entities,
-            media: { ...state.project.entities.media, [asset.id]: asset },
-          },
+      // Deliberately NOT committed to history. A thumbnail or waveform landing
+      // is an async artifact of an import the user already performed, not an
+      // action of theirs — an undo step for it would be unexplainable, and
+      // pressing undo would appear to do nothing.
+      const project: ProjectDocument = {
+        ...state.project,
+        entities: {
+          ...state.project.entities,
+          media: { ...state.project.entities.media, [asset.id]: asset },
         },
+      };
+
+      // The history's present entry is rewritten in place so its snapshot stays
+      // identical to the live document; leaving it stale would make the next
+      // undo silently discard the artifact.
+      return {
+        project,
+        history: { ...state.history, present: { ...state.history.present, state: project } },
       };
     }),
 
@@ -291,10 +383,11 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
 
       return {
         selectedClipIds: [],
-        project: withDerived({
-          ...state.project,
-          entities: { ...state.project.entities, media, clips },
-        }),
+        ...commit(
+          state,
+          withDerived({ ...state.project, entities: { ...state.project.entities, media, clips } }),
+          "Remove media",
+        ),
       };
     }),
 
@@ -337,15 +430,19 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
 
       return {
         selectedClipIds: [clip.id],
-        project: withDerived({
-          ...state.project,
-          entities: {
-            ...state.project.entities,
-            tracks,
-            clips: { ...state.project.entities.clips, [clip.id]: clip },
-          },
-          trackOrder,
-        }),
+        ...commit(
+          state,
+          withDerived({
+            ...state.project,
+            entities: {
+              ...state.project.entities,
+              tracks,
+              clips: { ...state.project.entities.clips, [clip.id]: clip },
+            },
+            trackOrder,
+          }),
+          "Add clip",
+        ),
       };
     }),
 }));

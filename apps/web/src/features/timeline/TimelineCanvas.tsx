@@ -65,6 +65,7 @@ export function TimelineCanvas() {
   const selectClips = useEditorStore((state) => state.selectClips);
   const clearSelection = useEditorStore((state) => state.clearSelection);
   const moveClipTo = useEditorStore((state) => state.moveClipTo);
+  const endGesture = useEditorStore((state) => state.endGesture);
 
   // `useShallow` is load-bearing, not an optimization: these selectors build a
   // new array on every call, and zustand v5 compares snapshots by reference.
@@ -286,11 +287,18 @@ export function TimelineCanvas() {
     ],
   );
 
-  const handlePointerUp = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
-    dragRef.current = { kind: "none" };
-    setSnapGuideFrame(null);
-    canvasRef.current?.releasePointerCapture(event.pointerId);
-  }, []);
+  const handlePointerUp = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      // Closes the undo entry for this drag, so the whole gesture is one step
+      // and the next drag starts a new one.
+      if (dragRef.current.kind === "move-clip") endGesture();
+
+      dragRef.current = { kind: "none" };
+      setSnapGuideFrame(null);
+      canvasRef.current?.releasePointerCapture(event.pointerId);
+    },
+    [endGesture],
+  );
 
   // --- Wheel: scroll and zoom ---------------------------------------------
 

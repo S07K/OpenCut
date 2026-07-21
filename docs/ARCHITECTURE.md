@@ -119,6 +119,37 @@ Each of these was a bug before it was a rule:
   calls `preventDefault`, the browser never offers a restore and the preview is
   a blank frame with no explanation.
 
+## Undo/redo
+
+History stores **immutable document snapshots**, not `apply`/`invert` command
+pairs. This revises the original plan, deliberately:
+
+- A hand-written `invert` can be subtly wrong, and a wrong inverse corrupts the
+  user's project *silently* — the worst failure mode an editor has. A snapshot
+  cannot be wrong; it is what the document was.
+- The document is normalized and updated immutably, so unchanged entities are
+  shared by reference between snapshots. Storing the previous document costs
+  only the nodes that changed. This is precisely what document invariant (2)
+  was chosen to buy.
+- Undo and redo are O(1) pointer moves instead of replayed computation.
+
+Intent is still first-class: each entry carries a label for the UI and a merge
+key so a gesture collapses into one step.
+
+**Every document mutation must go through the store's `commit` helper.** Writing
+to `project` directly makes the edit unundoable *and* desynchronizes the
+history's snapshot from the live document. The one deliberate exception is a
+late-arriving thumbnail or waveform, which rewrites the present entry in place —
+it is an async artifact of an import the user already performed, not an action
+of theirs, and an undo step for it would appear to do nothing.
+
+### Gesture merging is sealed, not timed
+
+Merging ends when the caller says the gesture ended (pointer-up), never after an
+elapsed window. A user positioning a clip carefully pauses mid-drag, and a time
+window splits that one gesture into several undo steps — which is exactly what
+testing this against a real drag revealed.
+
 ## The transport
 
 `AudioContext.currentTime` is the timebase for the entire editor. It is
@@ -162,9 +193,9 @@ Recorded here so they are not silently relitigated:
   not mux and has uneven browser coverage. An `ExportBackend` interface selects
   between `WebCodecsBackend`, `FFmpegWasmBackend`, and an optional `NodeBackend`
   by runtime capability probe.
-- **Commands, not `setState`.** Every mutation is a `Command` with
-  `apply`/`invert`. Undo/redo falls out for free, and so — later — do macros,
-  scripting, and multiplayer.
+- **Commands, not `setState`.** *(Revised — see "Undo/redo" above.)* History
+  stores snapshots rather than invertible commands; intent still lives at the
+  action layer, which is what macros and scripting will build on.
 - **Audio clock is the master clock.** _(Implemented.)_ See below.
 - **Timeline renders to canvas, not DOM.** DOM timelines degrade badly past
   roughly 200 clips. _(Implemented.)_

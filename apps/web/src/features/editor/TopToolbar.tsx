@@ -16,6 +16,14 @@ export function TopToolbar() {
   const resolution = useEditorStore((state) => state.project.settings.resolution);
   const fps = useEditorStore((state) => state.project.settings.frameRate);
   const renameProject = useEditorStore((state) => state.renameProject);
+  const undo = useEditorStore((state) => state.undo);
+  const redo = useEditorStore((state) => state.redo);
+  // Subscribed to `history` rather than calling canUndo() so the buttons
+  // re-render when the stack changes; a getter would read stale on first paint.
+  const history = useEditorStore((state) => state.history);
+
+  const undoable = history.past.length > 0;
+  const redoable = history.future.length > 0;
 
   return (
     <header className="border-border-subtle bg-surface-panel flex h-(--size-toolbar-height) shrink-0 items-center gap-1 border-b px-3">
@@ -49,13 +57,22 @@ export function TopToolbar() {
         }}
       />
 
-      {/* Undo/redo are inert until the history engine lands in Phase 2. They
-          are rendered disabled rather than hidden so the toolbar's final layout
-          is visible now and does not shift later. */}
-      <IconButton size="sm" label="Undo" disabled>
+      <IconButton
+        size="sm"
+        label={undoable ? `Undo ${history.present.label} (Cmd+Z)` : "Nothing to undo"}
+        disabled={!undoable}
+        onClick={undo}
+      >
         <Undo2 size={14} />
       </IconButton>
-      <IconButton size="sm" label="Redo" disabled>
+      <IconButton
+        size="sm"
+        label={
+          redoable ? `Redo ${history.future[0]?.label ?? ""} (Cmd+Shift+Z)` : "Nothing to redo"
+        }
+        disabled={!redoable}
+        onClick={redo}
+      >
         <Redo2 size={14} />
       </IconButton>
 

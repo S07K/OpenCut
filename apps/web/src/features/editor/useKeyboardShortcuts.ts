@@ -67,6 +67,23 @@ export function useKeyboardShortcuts(onSave?: () => void): void {
           state.splitAtPlayhead();
           break;
 
+        case "z":
+        case "Z":
+          if (!event.metaKey && !event.ctrlKey) break;
+          event.preventDefault();
+          // Cmd+Shift+Z is redo everywhere except Windows, where Ctrl+Y is the
+          // convention; both are accepted so neither audience has to relearn.
+          if (event.shiftKey) state.redo();
+          else state.undo();
+          return;
+
+        case "y":
+        case "Y":
+          if (!event.ctrlKey) break;
+          event.preventDefault();
+          state.redo();
+          return;
+
         case "n":
         case "N":
           if (event.metaKey || event.ctrlKey) return;
