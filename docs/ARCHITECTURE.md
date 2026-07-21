@@ -125,7 +125,7 @@ History stores **immutable document snapshots**, not `apply`/`invert` command
 pairs. This revises the original plan, deliberately:
 
 - A hand-written `invert` can be subtly wrong, and a wrong inverse corrupts the
-  user's project *silently* — the worst failure mode an editor has. A snapshot
+  user's project _silently_ — the worst failure mode an editor has. A snapshot
   cannot be wrong; it is what the document was.
 - The document is normalized and updated immutably, so unchanged entities are
   shared by reference between snapshots. Storing the previous document costs
@@ -137,7 +137,7 @@ Intent is still first-class: each entry carries a label for the UI and a merge
 key so a gesture collapses into one step.
 
 **Every document mutation must go through the store's `commit` helper.** Writing
-to `project` directly makes the edit unundoable *and* desynchronizes the
+to `project` directly makes the edit unundoable _and_ desynchronizes the
 history's snapshot from the live document. The one deliberate exception is a
 late-arriving thumbnail or waveform, which rewrites the present entry in place —
 it is an async artifact of an import the user already performed, not an action
@@ -193,7 +193,7 @@ Recorded here so they are not silently relitigated:
   not mux and has uneven browser coverage. An `ExportBackend` interface selects
   between `WebCodecsBackend`, `FFmpegWasmBackend`, and an optional `NodeBackend`
   by runtime capability probe.
-- **Commands, not `setState`.** *(Revised — see "Undo/redo" above.)* History
+- **Commands, not `setState`.** _(Revised — see "Undo/redo" above.)_ History
   stores snapshots rather than invertible commands; intent still lives at the
   action layer, which is what macros and scripting will build on.
 - **Audio clock is the master clock.** _(Implemented.)_ See below.
