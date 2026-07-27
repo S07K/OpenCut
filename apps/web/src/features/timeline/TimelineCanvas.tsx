@@ -16,6 +16,7 @@ import {
   type TimelineViewport,
 } from "./geometry";
 import { readTheme, renderTimeline, type TimelineTheme } from "./renderer";
+import { unionKeyframeFrames } from "./keyframeOverlay";
 import { useElementSize } from "@/hooks/useElementSize";
 import { selectClipsArray, selectOrderedTracks, useEditorStore } from "@/state/editorStore";
 
@@ -110,6 +111,17 @@ export function TimelineCanvas() {
     const rects = visibleClips(clips, layouts, viewport);
     clipRectsRef.current = rects;
 
+    // Keyframe diamonds are drawn only for a single selected animated clip;
+    // showing them for every clip at once would bury the timeline in noise.
+    let keyframes: { clipId: string; frames: readonly number[] } | null = null;
+    if (selectedClipIds.length === 1) {
+      const selected = clips.find((clip) => clip.id === selectedClipIds[0]);
+      if (selected) {
+        const frames = unionKeyframeFrames(selected);
+        if (frames.length > 0) keyframes = { clipId: selected.id, frames };
+      }
+    }
+
     renderTimeline({
       ctx,
       viewport,
@@ -119,6 +131,7 @@ export function TimelineCanvas() {
       playhead,
       selectedClipIds,
       snapGuideFrame,
+      keyframes,
       fps,
       theme: themeRef.current,
     });

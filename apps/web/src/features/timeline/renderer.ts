@@ -78,6 +78,11 @@ export interface RenderTimelineArgs {
   selectedClipIds: readonly Id[];
   /** Frame of the active snap guide during a drag, if any. */
   snapGuideFrame: Frame | null;
+  /**
+   * Keyframe times to draw on the selected clip, when exactly one clip with
+   * animation is selected. `null` otherwise.
+   */
+  keyframes: { clipId: Id; frames: readonly Frame[] } | null;
   fps: number;
   theme: TimelineTheme;
 }
@@ -92,10 +97,42 @@ export function renderTimeline(args: RenderTimelineArgs): void {
   drawTrackLanes(args);
   drawGridLines(args);
   drawClips(args);
+  drawKeyframes(args);
   drawRuler(args);
   drawMarkers(args);
   drawSnapGuide(args);
   drawPlayhead(args);
+}
+
+/**
+ * Draws keyframe diamonds along the bottom edge of the selected clip.
+ *
+ * Drawn after the clips so the diamonds sit on top of the clip fill, and before
+ * the ruler and playhead so those chrome elements always win visually.
+ */
+function drawKeyframes({ ctx, keyframes, clipRects, viewport, theme }: RenderTimelineArgs): void {
+  if (!keyframes) return;
+
+  const rect = clipRects.find((candidate) => candidate.clip.id === keyframes.clipId);
+  if (!rect) return;
+
+  const y = rect.y + rect.height - 6;
+  const size = 3.5;
+
+  for (const frame of keyframes.frames) {
+    const x = frameToX(frame, viewport);
+    if (x < rect.x - size || x > rect.x + rect.width + size) continue;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = theme.clipText;
+    ctx.strokeStyle = theme.background;
+    ctx.lineWidth = 1;
+    ctx.fillRect(-size, -size, size * 2, size * 2);
+    ctx.strokeRect(-size, -size, size * 2, size * 2);
+    ctx.restore();
+  }
 }
 
 function drawTrackLanes({ ctx, layouts, viewport, theme }: RenderTimelineArgs): void {
