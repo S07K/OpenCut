@@ -67,6 +67,12 @@ export interface EditorState {
   toggleSnap: () => void;
 
   moveClipTo: (clipId: Id, startFrame: Frame, trackId?: Id) => void;
+  /**
+   * Generic single-clip update. The updater must be pure and return a new clip.
+   * Kept generic so the store stays free of animation and property-schema
+   * knowledge, which lives in the properties feature.
+   */
+  updateClip: (clipId: Id, updater: (clip: Clip) => Clip, label: string, mergeKey?: string) => void;
   splitAtPlayhead: () => void;
   deleteSelected: () => void;
   setTrackFlag: (trackId: Id, flag: "locked" | "hidden" | "muted", value: boolean) => void;
@@ -181,6 +187,30 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
         }),
         "Move clip",
         `move:${clipId}`,
+      );
+    }),
+
+  updateClip: (clipId, updater, label, mergeKey) =>
+    set((state) => {
+      const clip = state.project.entities.clips[clipId];
+      if (!clip || clip.locked) return state;
+
+      const updated = updater(clip);
+      // Referential no-op guard: a scrub that lands on the same value must not
+      // push an undo entry or mark the project dirty.
+      if (updated === clip) return state;
+
+      return commit(
+        state,
+        withDerived({
+          ...state.project,
+          entities: {
+            ...state.project.entities,
+            clips: { ...state.project.entities.clips, [clipId]: updated },
+          },
+        }),
+        label,
+        mergeKey,
       );
     }),
 

@@ -60,8 +60,6 @@ export function TimelineCanvas() {
   const snapEnabled = useEditorStore((state) => state.snapEnabled);
 
   const setPlayhead = useEditorStore((state) => state.setPlayhead);
-  const setScrollFrame = useEditorStore((state) => state.setScrollFrame);
-  const zoomBy = useEditorStore((state) => state.zoomBy);
   const selectClips = useEditorStore((state) => state.selectClips);
   const clearSelection = useEditorStore((state) => state.clearSelection);
   const moveClipTo = useEditorStore((state) => state.moveClipTo);

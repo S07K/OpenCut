@@ -2,19 +2,14 @@
 
 import { useState } from "react";
 import { Panel, cn } from "@opencut/ui";
-import { useEditorStore } from "@/state/editorStore";
+import { PropertiesPanel } from "@/features/properties/PropertiesPanel";
 
-const TABS = ["Properties", "Transform", "Animation", "Masks", "Color", "Effects"] as const;
+const TABS = ["Properties", "Masks", "Color", "Effects"] as const;
 
 type Tab = (typeof TABS)[number];
 
 export function RightSidebar() {
   const [activeTab, setActiveTab] = useState<Tab>("Properties");
-
-  const selectedIds = useEditorStore((state) => state.selectedClipIds);
-  const clips = useEditorStore((state) => state.project.entities.clips);
-
-  const selectedClip = selectedIds.length === 1 ? clips[selectedIds[0]!] : undefined;
 
   return (
     <Panel bare className="scrollbar-slim">
@@ -42,38 +37,19 @@ export function RightSidebar() {
           ))}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto p-3">
-          {selectedIds.length === 0 && (
-            <p className="text-text-tertiary text-xs">Select a clip to edit its properties.</p>
-          )}
-
-          {selectedIds.length > 1 && (
-            <p className="text-text-tertiary text-xs">
-              {selectedIds.length} clips selected. Multi-edit arrives with the properties panel.
+        <div className="min-h-0 flex-1 overflow-auto">
+          {activeTab === "Properties" ? (
+            // Transform and Animation both live in the Properties panel — it
+            // already sections by group and shows keyframe state per property,
+            // so separate tabs would just fragment one coherent surface.
+            <PropertiesPanel />
+          ) : (
+            <p className="text-text-tertiary p-3 text-xs">
+              {activeTab} editing arrives in a later milestone.
             </p>
-          )}
-
-          {selectedClip && (
-            <dl className="space-y-2 text-xs">
-              <Row label="Name" value={selectedClip.name} />
-              <Row label="Kind" value={selectedClip.content.kind} />
-              <Row label="Start" value={`${selectedClip.startFrame}f`} />
-              <Row label="Duration" value={`${selectedClip.durationFrames}f`} />
-              <Row label="Masks" value={String(selectedClip.masks.length)} />
-              <Row label="Effects" value={String(selectedClip.effects.length)} />
-            </dl>
           )}
         </div>
       </div>
     </Panel>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <dt className="text-text-tertiary">{label}</dt>
-      <dd className="tabular text-text-primary truncate">{value}</dd>
-    </div>
   );
 }
