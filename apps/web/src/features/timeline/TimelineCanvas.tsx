@@ -16,7 +16,12 @@ import {
   type TimelineViewport,
 } from "./geometry";
 import { readTheme, renderTimeline, type TimelineTheme } from "./renderer";
-import { unionKeyframeFrames } from "./keyframeOverlay";
+import {
+  hitTestKeyframe,
+  moveKeyframesAtFrame,
+  removeKeyframesAtFrame,
+  unionKeyframeFrames,
+} from "./keyframeOverlay";
 import { useElementSize } from "@/hooks/useElementSize";
 import { selectClipsArray, selectOrderedTracks, useEditorStore } from "@/state/editorStore";
 
@@ -38,6 +43,12 @@ type DragMode =
       clipId: Id;
       /** Frame offset between the pointer and the clip's start, held constant. */
       grabOffsetFrames: number;
+    }
+  | {
+      kind: "move-keyframe";
+      clipId: Id;
+      /** The keyframe row's current frame; updated as the drag progresses. */
+      currentFrame: Frame;
     };
 
 export function TimelineCanvas() {
@@ -64,6 +75,7 @@ export function TimelineCanvas() {
   const selectClips = useEditorStore((state) => state.selectClips);
   const clearSelection = useEditorStore((state) => state.clearSelection);
   const moveClipTo = useEditorStore((state) => state.moveClipTo);
+  const updateClip = useEditorStore((state) => state.updateClip);
   const endGesture = useEditorStore((state) => state.endGesture);
 
   // `useShallow` is load-bearing, not an optimization: these selectors build a
@@ -157,7 +169,7 @@ export function TimelineCanvas() {
 
   // --- Pointer interaction -------------------------------------------------
 
-  const localPoint = useCallback((event: React.PointerEvent | PointerEvent) => {
+  const localPoint = useCallback((event: React.PointerEvent | React.MouseEvent | PointerEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
@@ -205,6 +217,22 @@ export function TimelineCanvas() {
       const clip = project.entities.clips[hit.clipId];
       if (!clip) return;
 
+      // Keyframe diamonds take priority over the clip body, but only on the
+      // already-selected clip whose diamonds are actually drawn. Grabbing a
+      // keyframe must not also start a clip move.
+      if (!clip.locked && selectedClipIds.length === 1 && selectedClipIds[0] === hit.clipId) {
+        const rect = clipRectsRef.current.find((candidate) => candidate.clip.id === hit.clipId);
+        const keyframeFrame = rect ? hitTestKeyframe(x, y, clip, rect, viewport) : null;
+        if (keyframeFrame !== null) {
+          dragRef.current = {
+            kind: "move-keyframe",
+            clipId: hit.clipId,
+            currentFrame: keyframeFrame,
+          };
+          return;
+        }
+      }
+
       const additive = event.shiftKey || event.metaKey || event.ctrlKey;
       if (additive) {
         selectClips(
@@ -246,6 +274,23 @@ export function TimelineCanvas() {
 
       if (drag.kind === "seek") {
         setPlayhead(frame);
+        return;
+      }
+
+      if (drag.kind === "move-keyframe") {
+        const target = Math.max(0, frame);
+        if (target === drag.currentFrame) return;
+
+        const from = drag.currentFrame;
+        updateClip(
+          drag.clipId,
+          (clip) => moveKeyframesAtFrame(clip, from, target),
+          "Move keyframe",
+          `keyframe:${drag.clipId}`,
+        );
+        // Advance the tracked position so the next move is relative to where the
+        // keyframe now sits, not where the gesture began.
+        dragRef.current = { ...drag, currentFrame: target };
         return;
       }
 
@@ -295,14 +340,37 @@ export function TimelineCanvas() {
       pixelsPerFrame,
       tracks,
       moveClipTo,
+      updateClip,
     ],
+  );
+
+  /** Double-click a keyframe diamond to delete it (and any sharing its frame). */
+  const handleDoubleClick = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      if (selectedClipIds.length !== 1) return;
+      const clipId = selectedClipIds[0]!;
+      const clip = project.entities.clips[clipId];
+      if (!clip || clip.locked) return;
+
+      const { x, y } = localPoint(event);
+      const rect = clipRectsRef.current.find((candidate) => candidate.clip.id === clipId);
+      if (!rect) return;
+
+      const frame = hitTestKeyframe(x, y, clip, rect, viewportNow());
+      if (frame === null) return;
+
+      updateClip(clipId, (c) => removeKeyframesAtFrame(c, frame), "Delete keyframe");
+    },
+    [selectedClipIds, project.entities.clips, localPoint, viewportNow, updateClip],
   );
 
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       // Closes the undo entry for this drag, so the whole gesture is one step
       // and the next drag starts a new one.
-      if (dragRef.current.kind === "move-clip") endGesture();
+      if (dragRef.current.kind === "move-clip" || dragRef.current.kind === "move-keyframe") {
+        endGesture();
+      }
 
       dragRef.current = { kind: "none" };
       setSnapGuideFrame(null);
@@ -367,6 +435,7 @@ export function TimelineCanvas() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onDoubleClick={handleDoubleClick}
       />
     </div>
   );

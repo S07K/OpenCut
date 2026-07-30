@@ -8,6 +8,7 @@ import {
   type TimelineViewport,
   type TrackLayout,
 } from "./geometry";
+import { keyframeRowY } from "./keyframeOverlay";
 
 /**
  * Canvas timeline renderer.
@@ -116,7 +117,9 @@ function drawKeyframes({ ctx, keyframes, clipRects, viewport, theme }: RenderTim
   const rect = clipRects.find((candidate) => candidate.clip.id === keyframes.clipId);
   if (!rect) return;
 
-  const y = rect.y + rect.height - 6;
+  // Shares the row geometry with hit-testing, so the drawn diamond and its grab
+  // target cannot drift apart.
+  const y = keyframeRowY(rect);
   const size = 3.5;
 
   for (const frame of keyframes.frames) {
