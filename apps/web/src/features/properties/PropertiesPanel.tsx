@@ -6,6 +6,7 @@ import { useEditorStore } from "@/state/editorStore";
 import { groupedProperties } from "./propertySchema";
 import { PropertyRow } from "./PropertyRow";
 import { useClipProperties } from "./useClipProperties";
+import { PresetPicker } from "@/features/animation/PresetPicker";
 
 /**
  * The properties inspector for the selected clip.
@@ -37,6 +38,8 @@ export function PropertiesPanel() {
   return (
     <div key={clip.id} className="flex flex-col gap-3 p-3">
       <ClipHeader clip={clip} playheadFrame={playhead} />
+
+      <PresetPicker clip={clip} />
 
       {groupedProperties(clip).map(([group, descriptors]) => (
         <section key={group}>
