@@ -47,7 +47,12 @@ describe("resolveScene — masks", () => {
   it("resolves a clip's enabled masks to geometry on the node", () => {
     const track = createTrack({ kind: "video", index: 0 });
     const clip: Clip = {
-      ...createClip({ trackId: track.id, startFrame: 0, durationFrames: 10, content: videoContent() }),
+      ...createClip({
+        trackId: track.id,
+        startFrame: 0,
+        durationFrames: 10,
+        content: videoContent(),
+      }),
       masks: [createEllipseMask({ x: 0, y: 0 }, { x: 40, y: 40 })],
     };
 
@@ -59,7 +64,12 @@ describe("resolveScene — masks", () => {
   it("omits disabled masks", () => {
     const track = createTrack({ kind: "video", index: 0 });
     const clip: Clip = {
-      ...createClip({ trackId: track.id, startFrame: 0, durationFrames: 10, content: videoContent() }),
+      ...createClip({
+        trackId: track.id,
+        startFrame: 0,
+        durationFrames: 10,
+        content: videoContent(),
+      }),
       masks: [{ ...createEllipseMask({ x: 0, y: 0 }, { x: 40, y: 40 }), enabled: false }],
     };
 
@@ -68,7 +78,12 @@ describe("resolveScene — masks", () => {
 
   it("reports no masks for an unmasked clip", () => {
     const track = createTrack({ kind: "video", index: 0 });
-    const clip = createClip({ trackId: track.id, startFrame: 0, durationFrames: 10, content: videoContent() });
+    const clip = createClip({
+      trackId: track.id,
+      startFrame: 0,
+      durationFrames: 10,
+      content: videoContent(),
+    });
     expect(resolveScene(projectWith([track], [clip]), 5).nodes[0]!.masks).toEqual([]);
   });
 });
