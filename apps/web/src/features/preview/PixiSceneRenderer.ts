@@ -2,6 +2,7 @@
 
 import { Application, Container, Graphics, Sprite, Text, TextStyle } from "pixi.js";
 import type { Scene, SceneNode } from "@opencut/render-engine";
+import type { ResolvedMask } from "@opencut/mask-engine";
 import type { Id, MediaAsset } from "@opencut/types";
 import { MediaTextureCache } from "./MediaTextureCache";
 
@@ -29,6 +30,8 @@ export class PixiSceneRenderer {
   private readonly app = new Application();
   private readonly root = new Container();
   private readonly nodes = new Map<Id, Container>();
+  /** Per-node mask graphic, kept so it can be reused and torn down cleanly. */
+  private readonly maskGraphics = new Map<Id, Graphics>();
   private readonly cache: MediaTextureCache;
 
   private initialized = false;
@@ -109,6 +112,9 @@ export class PixiSceneRenderer {
     // Remove display objects whose clips left the frame.
     for (const [clipId, container] of this.nodes) {
       if (seen.has(clipId)) continue;
+      // The mask graphic is a child, so destroying with children reaps it too;
+      // just drop the map entry so it is not reused against a destroyed object.
+      this.maskGraphics.delete(clipId);
       container.destroy({ children: true });
       this.nodes.delete(clipId);
     }
@@ -137,6 +143,67 @@ export class PixiSceneRenderer {
 
     this.applyTransform(container, node);
     this.updateContent(container, node, assets);
+    this.applyMasks(container, node);
+  }
+
+  /**
+   * Applies the node's resolved masks to its content.
+   *
+   * The mask is a Graphics child of the content object, so it inherits the
+   * content's transform and stays glued to it as the clip moves, scales, or
+   * rotates. Mask polygons are in the node's local space; a factory-created mask
+   * centred at (0,0) therefore clips around the content's centre (which assumes
+   * the default 0.5 anchor — refined when the drawing overlay lands).
+   *
+   * This increment covers the common cases: an additive union of "add" masks,
+   * and a single inverted mask cut as a hole. `subtract`/`intersect` across
+   * multiple masks and `feather` need a render-texture pass and are deferred;
+   * they degrade to an additive union rather than rendering wrong.
+   */
+  private applyMasks(content: Container, node: SceneNode): void {
+    const existing = this.maskGraphics.get(node.clipId);
+
+    if (node.masks.length === 0) {
+      if (existing) {
+        content.mask = null;
+        content.removeChild(existing);
+        existing.destroy();
+        this.maskGraphics.delete(node.clipId);
+      }
+      return;
+    }
+
+    let graphic = existing;
+    if (!graphic) {
+      graphic = new Graphics();
+      content.addChild(graphic);
+      this.maskGraphics.set(node.clipId, graphic);
+    }
+
+    graphic.clear();
+    this.drawMaskGeometry(graphic, node.masks);
+    // A mask object is not itself drawn; Pixi uses it as a stencil.
+    content.mask = graphic;
+  }
+
+  private drawMaskGeometry(graphic: Graphics, masks: readonly ResolvedMask[]): void {
+    const single = masks.length === 1 ? masks[0]! : null;
+
+    if (single?.inverted) {
+      // Everything except the polygon shows: fill a frame-spanning rect, then
+      // cut the polygon out of it.
+      const extent = 100_000;
+      graphic.rect(-extent, -extent, extent * 2, extent * 2).fill(0xffffff);
+      graphic.poly(flattenPolygon(single.polygon)).cut();
+      return;
+    }
+
+    // Additive union: every polygon that reveals content is filled. Subtract/
+    // intersect are treated as additive for now (documented above).
+    for (const mask of masks) {
+      if (mask.inverted || mask.polygon.length < 3) continue;
+      graphic.poly(flattenPolygon(mask.polygon)).fill(0xffffff);
+    }
   }
 
   private createDisplayObject(node: SceneNode, assets: Record<Id, MediaAsset>): Container | null {
@@ -342,4 +409,11 @@ export class PixiSceneRenderer {
     // what StrictMode's double-mount triggers in development.
     this.app.destroy({ removeView: false }, { children: true });
   }
+}
+
+/** Flattens a polygon to the [x0, y0, x1, y1, …] array Pixi's `poly` expects. */
+function flattenPolygon(polygon: readonly { x: number; y: number }[]): number[] {
+  const flat: number[] = [];
+  for (const point of polygon) flat.push(point.x, point.y);
+  return flat;
 }

@@ -35,6 +35,9 @@ importers:
       '@opencut/history-engine':
         specifier: workspace:*
         version: link:../../packages/history-engine
+      '@opencut/mask-engine':
+        specifier: workspace:*
+        version: link:../../packages/mask-engine
       '@opencut/media-engine':
         specifier: workspace:*
         version: link:../../packages/media-engine

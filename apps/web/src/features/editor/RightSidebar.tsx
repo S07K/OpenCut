@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Panel, cn } from "@opencut/ui";
 import { PropertiesPanel } from "@/features/properties/PropertiesPanel";
+import { MasksPanel } from "@/features/masks/MasksPanel";
 
 const TABS = ["Properties", "Masks", "Color", "Effects"] as const;
 
@@ -43,6 +44,8 @@ export function RightSidebar() {
             // already sections by group and shows keyframe state per property,
             // so separate tabs would just fragment one coherent surface.
             <PropertiesPanel />
+          ) : activeTab === "Masks" ? (
+            <MasksPanel />
           ) : (
             <p className="text-text-tertiary p-3 text-xs">
               {activeTab} editing arrives in a later milestone.
