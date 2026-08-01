@@ -1,13 +1,11 @@
 {
-  "name": "@opencut/render-engine",
+  "name": "@opencut/mask-engine",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
+  "exports": { ".": "./src/index.ts" },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
@@ -15,12 +13,7 @@
   },
   "dependencies": {
     "@opencut/types": "workspace:*",
-    "@opencut/animation-engine": "workspace:*",
-    "@opencut/mask-engine": "workspace:*"
+    "@opencut/animation-engine": "workspace:*"
   },
-  "devDependencies": {
-    "vitest": "^2.1.8",
-    "@opencut/utils": "workspace:*",
-    "@opencut/mask-engine": "workspace:*"
-  }
+  "devDependencies": { "vitest": "^2.1.8" }
 }

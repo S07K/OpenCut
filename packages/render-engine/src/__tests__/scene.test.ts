@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Clip, ProjectDocument, Track } from "@opencut/types";
 import { staticValue } from "@opencut/types";
 import { createClip, createProject, createTrack } from "@opencut/utils";
+import { createEllipseMask } from "@opencut/mask-engine";
 import { resolveScene, sourceTimeFor } from "../scene";
 
 function videoContent(mediaId = "m1", speed = 1, sourceInFrame = 0) {
@@ -41,6 +42,36 @@ function projectWith(tracks: Track[], clips: Clip[]): ProjectDocument {
     trackOrder: tracks.map((t) => t.id),
   };
 }
+
+describe("resolveScene — masks", () => {
+  it("resolves a clip's enabled masks to geometry on the node", () => {
+    const track = createTrack({ kind: "video", index: 0 });
+    const clip: Clip = {
+      ...createClip({ trackId: track.id, startFrame: 0, durationFrames: 10, content: videoContent() }),
+      masks: [createEllipseMask({ x: 0, y: 0 }, { x: 40, y: 40 })],
+    };
+
+    const node = resolveScene(projectWith([track], [clip]), 5).nodes[0]!;
+    expect(node.masks).toHaveLength(1);
+    expect(node.masks[0]!.polygon.length).toBeGreaterThan(3);
+  });
+
+  it("omits disabled masks", () => {
+    const track = createTrack({ kind: "video", index: 0 });
+    const clip: Clip = {
+      ...createClip({ trackId: track.id, startFrame: 0, durationFrames: 10, content: videoContent() }),
+      masks: [{ ...createEllipseMask({ x: 0, y: 0 }, { x: 40, y: 40 }), enabled: false }],
+    };
+
+    expect(resolveScene(projectWith([track], [clip]), 5).nodes[0]!.masks).toHaveLength(0);
+  });
+
+  it("reports no masks for an unmasked clip", () => {
+    const track = createTrack({ kind: "video", index: 0 });
+    const clip = createClip({ trackId: track.id, startFrame: 0, durationFrames: 10, content: videoContent() });
+    expect(resolveScene(projectWith([track], [clip]), 5).nodes[0]!.masks).toEqual([]);
+  });
+});
 
 describe("resolveScene", () => {
   it("includes only clips active at the frame", () => {

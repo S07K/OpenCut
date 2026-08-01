@@ -25,6 +25,7 @@ import type {
   Vec2,
 } from "@opencut/types";
 import { evaluate } from "@opencut/animation-engine";
+import { resolveMasks, type ResolvedMask } from "@opencut/mask-engine";
 
 /** A transform with every animated property resolved to a concrete value. */
 export interface ResolvedTransform {
@@ -103,7 +104,12 @@ export interface SceneNode {
   transform: ResolvedTransform;
   appearance: ResolvedAppearance;
   content: ResolvedContent;
-  hasMasks: boolean;
+  /**
+   * Masks resolved to geometry at this frame, in stack order. Empty when the
+   * clip has no enabled masks. The compositor fills these polygons; the scene
+   * carries the shapes so preview and export mask identically.
+   */
+  masks: ResolvedMask[];
   hasGrade: boolean;
 }
 
@@ -326,7 +332,7 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
         transform: resolveTransform(clip, frame),
         appearance: resolveAppearance(clip, frame),
         content,
-        hasMasks: clip.masks.some((mask) => mask.enabled),
+        masks: resolveMasks(clip.masks, frame),
         hasGrade: clip.grade?.enabled ?? false,
       });
     }
