@@ -1,7 +1,8 @@
 "use client";
 
 import { Circle, Eye, EyeOff, RectangleHorizontal, Trash2 } from "lucide-react";
-import type { Clip, Mask } from "@opencut/types";
+import type { Clip, Mask, Vec2 } from "@opencut/types";
+import { evaluate } from "@opencut/animation-engine";
 import { createEllipseMask, createRectangleMask } from "@opencut/mask-engine";
 import { IconButton, cn } from "@opencut/ui";
 import { useShallow } from "zustand/react/shallow";
@@ -24,6 +25,7 @@ export function MasksPanel() {
     selectedIds.length === 1 ? state.project.entities.clips[selectedIds[0]!] : undefined,
   );
   const resolution = useEditorStore((state) => state.project.settings.resolution);
+  const playhead = useEditorStore((state) => state.playhead);
   const updateClip = useEditorStore((state) => state.updateClip);
 
   if (!clip) {
@@ -36,9 +38,13 @@ export function MasksPanel() {
   const addMask = (make: () => Mask) =>
     updateClip(clip.id, (c) => ({ ...c, masks: [...c.masks, make()] }), "Add mask");
 
-  // Default the shape to a third of the frame, centred on the content origin.
-  const w = resolution.width / 3;
-  const h = resolution.height / 3;
+  // Mask units are content-local (the mask graphic is a child of the scaled
+  // content, After Effects style), so a default sized in raw frame pixels would
+  // render clip-scale times too big. Dividing by the clip's scale makes a new
+  // mask appear as ~a third of the frame whatever the content's scale is.
+  const scale = evaluate(clip.transform.scale, playhead) as Vec2;
+  const w = resolution.width / 3 / (scale.x || 1);
+  const h = resolution.height / 3 / (scale.y || 1);
 
   const setMask = (maskId: string, patch: Partial<Mask>, label: string) =>
     updateClip(

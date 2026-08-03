@@ -6,6 +6,7 @@ import { IconButton } from "@opencut/ui";
 import { formatTimecode } from "@opencut/timeline-engine";
 import { useEditorStore } from "@/state/editorStore";
 import { PreviewStage } from "@/features/preview/PreviewStage";
+import { MaskOverlay } from "@/features/masks/MaskOverlay";
 import { useElementSize } from "@/hooks/useElementSize";
 
 /**
@@ -63,6 +64,14 @@ export function PreviewPanel() {
             )}
 
             {showGuides && <SafeGuides />}
+
+            {stageSize.width > 0 && (
+              <MaskOverlay
+                width={stageSize.width}
+                height={stageSize.height}
+                resolution={resolution}
+              />
+            )}
           </div>
         </div>
       </div>
