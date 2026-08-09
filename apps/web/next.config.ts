@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     "@opencut/playback-engine",
     "@opencut/history-engine",
     "@opencut/mask-engine",
+    "@opencut/caption-engine",
     "@opencut/ui",
   ],
 };

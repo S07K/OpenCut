@@ -24,8 +24,10 @@ import type {
   Size,
   Vec2,
 } from "@opencut/types";
+import type { CaptionPreset } from "@opencut/types";
 import { evaluate } from "@opencut/animation-engine";
 import { resolveMasks, type ResolvedMask } from "@opencut/mask-engine";
+import { activeWordIndex, blockAtFrame, getCaptionPreset } from "@opencut/caption-engine";
 
 /** A transform with every animated property resolved to a concrete value. */
 export interface ResolvedTransform {
@@ -121,6 +123,24 @@ export interface AudioNode {
   muted: boolean;
 }
 
+/** A caption word resolved for drawing, with its highlight state. */
+export interface ResolvedCaptionWord {
+  text: string;
+  /** True for the word under the playhead — the compositor tints this one. */
+  active: boolean;
+}
+
+/**
+ * The caption visible at the current frame, fully styled.
+ *
+ * Derived from the transcript's word data plus the track preset, so restyling
+ * or re-timing is instant and never touches the words themselves.
+ */
+export interface ResolvedCaption {
+  words: ResolvedCaptionWord[];
+  preset: CaptionPreset;
+}
+
 export interface Scene {
   frame: Frame;
   resolution: Size;
@@ -129,6 +149,8 @@ export interface Scene {
   nodes: SceneNode[];
   /** Audio that should be sounding at this frame. */
   audio: AudioNode[];
+  /** The caption to overlay at this frame, or null. Drawn above all nodes. */
+  caption: ResolvedCaption | null;
 }
 
 /** True when `frame` falls within the clip's half-open range. */
@@ -346,5 +368,27 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
     backgroundColor: settings.backgroundColor,
     nodes,
     audio,
+    caption: resolveCaption(project, frame),
   };
+}
+
+/**
+ * Resolves the caption to show at `frame`, across all caption tracks.
+ *
+ * The first track with an active block wins — overlapping caption tracks are
+ * unusual, and picking one keeps the overlay unambiguous. Word highlighting is
+ * baked in here so the compositor stays a dumb renderer.
+ */
+function resolveCaption(project: ProjectDocument, frame: Frame): ResolvedCaption | null {
+  for (const track of Object.values(project.entities.captionTracks)) {
+    const block = blockAtFrame(track.blocks, frame);
+    if (!block) continue;
+
+    const active = activeWordIndex(block, frame);
+    return {
+      preset: getCaptionPreset(track.presetId),
+      words: block.words.map((word, index) => ({ text: word.text, active: index === active })),
+    };
+  }
+  return null;
 }

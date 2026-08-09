@@ -192,6 +192,9 @@ importers:
       '@opencut/animation-engine':
         specifier: workspace:*
         version: link:../animation-engine
+      '@opencut/caption-engine':
+        specifier: workspace:*
+        version: link:../caption-engine
       '@opencut/mask-engine':
         specifier: workspace:*
         version: link:../mask-engine

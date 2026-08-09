@@ -40,6 +40,8 @@ export class PixiSceneRenderer {
   private readonly requested = new Set<Id>();
   private onTextureReady: (() => void) | null = null;
   private isPlaying = false;
+  /** Always-on-top container for the caption overlay. */
+  private captionContainer: Container | null = null;
 
   constructor(cache: MediaTextureCache) {
     this.cache = cache;
@@ -126,6 +128,8 @@ export class PixiSceneRenderer {
       if (container)
         this.root.setChildIndex(container, Math.min(index, this.root.children.length - 1));
     });
+
+    this.syncCaption(scene);
 
     this.app.renderer.render(this.app.stage);
   }
@@ -393,6 +397,74 @@ export class PixiSceneRenderer {
     if (shape.stroke.enabled) {
       graphics.stroke({ color: shape.stroke.color, width: shape.stroke.width });
     }
+  }
+
+  /**
+   * Draws the caption overlay above every node.
+   *
+   * Kept in its own always-on-top container so captions never interleave with
+   * clip z-order. The active word is a separate tinted Text so only it recolours
+   * as the playhead advances — the karaoke effect — without restyling the line.
+   */
+  private syncCaption(scene: Scene): void {
+    if (!scene.caption) {
+      if (this.captionContainer) this.captionContainer.visible = false;
+      return;
+    }
+
+    if (!this.captionContainer) {
+      this.captionContainer = new Container();
+      this.root.addChild(this.captionContainer);
+    }
+    const container = this.captionContainer;
+    container.visible = true;
+    // Always last child, so it sits above all clips regardless of node churn.
+    this.root.setChildIndex(container, this.root.children.length - 1);
+    container.removeChildren().forEach((child) => child.destroy());
+
+    const { preset, words } = scene.caption;
+    const gap = preset.fontSize * 0.28;
+
+    // Build each word as its own Text so the active one can be tinted, then lay
+    // them out on a single centred line.
+    const parts = words.map((word) => {
+      const text = new Text({
+        text: preset.uppercase ? word.text.toUpperCase() : word.text,
+        style: new TextStyle({
+          fontFamily: preset.fontFamily,
+          fontSize: preset.fontSize,
+          fontWeight: String(preset.fontWeight) as TextStyle["fontWeight"],
+          fill: word.active ? preset.activeWordColor : preset.color,
+          stroke: preset.stroke.enabled
+            ? { color: preset.stroke.color, width: preset.stroke.width, join: "round" }
+            : undefined,
+          dropShadow: preset.shadow.enabled
+            ? {
+                color: preset.shadow.color,
+                blur: preset.shadow.blur,
+                distance: preset.shadow.offsetY,
+                angle: Math.PI / 2,
+                alpha: 1,
+              }
+            : undefined,
+        }),
+      });
+      return text;
+    });
+
+    const totalWidth = parts.reduce((sum, part) => sum + part.width, 0) + gap * (parts.length - 1);
+    const { width, height } = this.lastResolution;
+
+    // Frame origin is the centre, so x starts at minus half the line width.
+    let x = -totalWidth / 2;
+    const y = (preset.positionY - 0.5) * height;
+
+    for (const part of parts) {
+      part.position.set(x, y);
+      container.addChild(part);
+      x += part.width + gap;
+    }
+    void width; // reserved for future word-wrap across the frame width
   }
 
   get projectResolution(): { width: number; height: number } {

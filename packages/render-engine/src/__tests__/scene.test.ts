@@ -43,6 +43,64 @@ function projectWith(tracks: Track[], clips: Clip[]): ProjectDocument {
   };
 }
 
+describe("resolveScene — captions", () => {
+  function withCaption(): ProjectDocument {
+    const base = createProject();
+    return {
+      ...base,
+      entities: {
+        ...base.entities,
+        captionTracks: {
+          ct1: {
+            id: "ct1",
+            sourceMediaId: null,
+            language: "en",
+            presetId: "core.captions.tiktok",
+            blocks: [
+              {
+                id: "blk",
+                styleOverrideId: null,
+                startFrame: 0,
+                endFrame: 30,
+                words: [
+                  { text: "hello", startFrame: 0, endFrame: 15, confidence: 1 },
+                  { text: "world", startFrame: 15, endFrame: 30, confidence: 1 },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    };
+  }
+
+  it("resolves the active caption block with its preset", () => {
+    const caption = resolveScene(withCaption(), 5).caption;
+    expect(caption).not.toBeNull();
+    expect(caption!.words.map((w) => w.text)).toEqual(["hello", "world"]);
+    expect(caption!.preset.name).toBe("TikTok");
+  });
+
+  it("marks the word under the playhead active", () => {
+    expect(resolveScene(withCaption(), 5).caption!.words.map((w) => w.active)).toEqual([
+      true,
+      false,
+    ]);
+    expect(resolveScene(withCaption(), 20).caption!.words.map((w) => w.active)).toEqual([
+      false,
+      true,
+    ]);
+  });
+
+  it("is null when no block covers the frame", () => {
+    expect(resolveScene(withCaption(), 100).caption).toBeNull();
+  });
+
+  it("is null with no caption tracks", () => {
+    expect(resolveScene(createProject(), 0).caption).toBeNull();
+  });
+});
+
 describe("resolveScene — masks", () => {
   it("resolves a clip's enabled masks to geometry on the node", () => {
     const track = createTrack({ kind: "video", index: 0 });
