@@ -32,6 +32,9 @@ importers:
       '@opencut/animation-engine':
         specifier: workspace:*
         version: link:../../packages/animation-engine
+      '@opencut/caption-engine':
+        specifier: workspace:*
+        version: link:../../packages/caption-engine
       '@opencut/history-engine':
         specifier: workspace:*
         version: link:../../packages/history-engine

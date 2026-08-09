@@ -1,7 +1,15 @@
 "use client";
 
 import { create } from "zustand";
-import type { Clip, Frame, Id, MediaAsset, ProjectDocument, Track } from "@opencut/types";
+import type {
+  CaptionTrackData,
+  Clip,
+  Frame,
+  Id,
+  MediaAsset,
+  ProjectDocument,
+  Track,
+} from "@opencut/types";
 import { computeDuration, moveClip, rippleDelete, splitClip } from "@opencut/timeline-engine";
 import { createClipForAsset, trackKindForAsset } from "@opencut/media-engine";
 import { createId, createProject, createTrack } from "@opencut/utils";
@@ -83,6 +91,18 @@ export interface EditorState {
   removeMediaAsset: (assetId: Id) => void;
   /** Appends a clip for the asset to the end of a compatible track. */
   addClipFromAsset: (assetId: Id) => void;
+
+  /** Adds or replaces a caption track by id. */
+  upsertCaptionTrack: (track: CaptionTrackData, label: string) => void;
+  /** Removes a caption track. */
+  removeCaptionTrack: (trackId: Id) => void;
+  /** Applies a pure edit to a caption track by id, as one undo step. */
+  updateCaptionTrack: (
+    trackId: Id,
+    updater: (track: CaptionTrackData) => CaptionTrackData,
+    label: string,
+    mergeKey?: string,
+  ) => void;
 
   /** Swaps in a whole document, on project load or restore. */
   replaceProject: (project: ProjectDocument) => void;
@@ -367,6 +387,56 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
           modifiedAt: Date.now(),
         },
         assets.length === 1 ? "Import media" : `Import ${assets.length} files`,
+      );
+    }),
+
+  upsertCaptionTrack: (track, label) =>
+    set((state) =>
+      commit(
+        state,
+        withDerived({
+          ...state.project,
+          entities: {
+            ...state.project.entities,
+            captionTracks: { ...state.project.entities.captionTracks, [track.id]: track },
+          },
+        }),
+        label,
+      ),
+    ),
+
+  removeCaptionTrack: (trackId) =>
+    set((state) => {
+      const captionTracks = { ...state.project.entities.captionTracks };
+      if (!captionTracks[trackId]) return state;
+      delete captionTracks[trackId];
+
+      return commit(
+        state,
+        withDerived({ ...state.project, entities: { ...state.project.entities, captionTracks } }),
+        "Remove captions",
+      );
+    }),
+
+  updateCaptionTrack: (trackId, updater, label, mergeKey) =>
+    set((state) => {
+      const track = state.project.entities.captionTracks[trackId];
+      if (!track) return state;
+
+      const updated = updater(track);
+      if (updated === track) return state;
+
+      return commit(
+        state,
+        withDerived({
+          ...state.project,
+          entities: {
+            ...state.project.entities,
+            captionTracks: { ...state.project.entities.captionTracks, [trackId]: updated },
+          },
+        }),
+        label,
+        mergeKey,
       );
     }),
 

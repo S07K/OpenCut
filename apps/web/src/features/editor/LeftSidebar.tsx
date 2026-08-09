@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Panel, cn } from "@opencut/ui";
 import { MediaPanel } from "@/features/media/MediaPanel";
+import { CaptionsPanel } from "@/features/captions/CaptionsPanel";
 
 /**
  * The left rail and its active panel.
@@ -73,7 +74,13 @@ export function LeftSidebar() {
 
       <div className="min-w-0 flex-1">
         <Panel title={active.label} className="scrollbar-slim">
-          {active.id === "media" ? <MediaPanel /> : <EmptySection label={active.label} />}
+          {active.id === "media" ? (
+            <MediaPanel />
+          ) : active.id === "captions" ? (
+            <CaptionsPanel />
+          ) : (
+            <EmptySection label={active.label} />
+          )}
         </Panel>
       </div>
     </div>
