@@ -35,6 +35,9 @@ importers:
       '@opencut/caption-engine':
         specifier: workspace:*
         version: link:../../packages/caption-engine
+      '@opencut/color-engine':
+        specifier: workspace:*
+        version: link:../../packages/color-engine
       '@opencut/history-engine':
         specifier: workspace:*
         version: link:../../packages/history-engine
@@ -135,6 +138,19 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.1)(lightningcss@1.32.0)
 
+  packages/color-engine:
+    dependencies:
+      '@opencut/animation-engine':
+        specifier: workspace:*
+        version: link:../animation-engine
+      '@opencut/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.1)(lightningcss@1.32.0)
+
   packages/history-engine:
     devDependencies:
       vitest:
@@ -198,6 +214,9 @@ importers:
       '@opencut/caption-engine':
         specifier: workspace:*
         version: link:../caption-engine
+      '@opencut/color-engine':
+        specifier: workspace:*
+        version: link:../color-engine
       '@opencut/mask-engine':
         specifier: workspace:*
         version: link:../mask-engine

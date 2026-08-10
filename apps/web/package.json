@@ -13,6 +13,7 @@
   "dependencies": {
     "@opencut/animation-engine": "workspace:*",
     "@opencut/caption-engine": "workspace:*",
+    "@opencut/color-engine": "workspace:*",
     "@opencut/history-engine": "workspace:*",
     "@opencut/mask-engine": "workspace:*",
     "@opencut/media-engine": "workspace:*",

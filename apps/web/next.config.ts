@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
     "@opencut/history-engine",
     "@opencut/mask-engine",
     "@opencut/caption-engine",
+    "@opencut/color-engine",
     "@opencut/ui",
   ],
 };

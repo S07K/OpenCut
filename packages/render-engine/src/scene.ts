@@ -28,6 +28,7 @@ import type { CaptionPreset } from "@opencut/types";
 import { evaluate } from "@opencut/animation-engine";
 import { resolveMasks, type ResolvedMask } from "@opencut/mask-engine";
 import { activeWordIndex, blockAtFrame, getCaptionPreset } from "@opencut/caption-engine";
+import { isNeutralGrade, resolveGrade, type ResolvedGrade } from "@opencut/color-engine";
 
 /** A transform with every animated property resolved to a concrete value. */
 export interface ResolvedTransform {
@@ -112,7 +113,12 @@ export interface SceneNode {
    * carries the shapes so preview and export mask identically.
    */
   masks: ResolvedMask[];
-  hasGrade: boolean;
+  /**
+   * The colour grade resolved for this frame, or null when the clip has no
+   * enabled, non-neutral grade. A neutral grade resolves to null so the
+   * compositor skips the shader pass entirely.
+   */
+  grade: ResolvedGrade | null;
 }
 
 export interface AudioNode {
@@ -355,7 +361,7 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
         appearance: resolveAppearance(clip, frame),
         content,
         masks: resolveMasks(clip.masks, frame),
-        hasGrade: clip.grade?.enabled ?? false,
+        grade: resolveClipGrade(clip, frame),
       });
     }
   });
@@ -370,6 +376,18 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
     audio,
     caption: resolveCaption(project, frame),
   };
+}
+
+/**
+ * Resolves a clip's colour grade at `frame`, or null.
+ *
+ * Returns null for a disabled grade *and* for one whose values are all neutral,
+ * so the compositor never runs a full-frame shader that would change nothing.
+ */
+function resolveClipGrade(clip: Clip, frame: Frame): ResolvedGrade | null {
+  if (!clip.grade?.enabled) return null;
+  const resolved = resolveGrade(clip.grade, frame);
+  return isNeutralGrade(resolved) ? null : resolved;
 }
 
 /**

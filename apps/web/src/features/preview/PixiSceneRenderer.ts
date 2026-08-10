@@ -1,6 +1,14 @@
 "use client";
 
-import { Application, Container, Graphics, Sprite, Text, TextStyle } from "pixi.js";
+import {
+  Application,
+  ColorMatrixFilter,
+  Container,
+  Graphics,
+  Sprite,
+  Text,
+  TextStyle,
+} from "pixi.js";
 import type { Scene, SceneNode } from "@opencut/render-engine";
 import type { ResolvedMask } from "@opencut/mask-engine";
 import type { Id, MediaAsset } from "@opencut/types";
@@ -32,6 +40,8 @@ export class PixiSceneRenderer {
   private readonly nodes = new Map<Id, Container>();
   /** Per-node mask graphic, kept so it can be reused and torn down cleanly. */
   private readonly maskGraphics = new Map<Id, Graphics>();
+  /** Per-node colour-grade filter, reused across frames. */
+  private readonly gradeFilters = new Map<Id, ColorMatrixFilter>();
   private readonly cache: MediaTextureCache;
 
   private initialized = false;
@@ -117,6 +127,7 @@ export class PixiSceneRenderer {
       // The mask graphic is a child, so destroying with children reaps it too;
       // just drop the map entry so it is not reused against a destroyed object.
       this.maskGraphics.delete(clipId);
+      this.gradeFilters.delete(clipId);
       container.destroy({ children: true });
       this.nodes.delete(clipId);
     }
@@ -148,6 +159,46 @@ export class PixiSceneRenderer {
     this.applyTransform(container, node);
     this.updateContent(container, node, assets);
     this.applyMasks(container, node);
+    this.applyGrade(container, node);
+  }
+
+  /**
+   * Applies the node's colour grade as a ColorMatrixFilter.
+   *
+   * The scene resolver hands over a fully-numeric grade (or null for neutral),
+   * so this stays a dumb mapping onto filter methods. Covers the high-impact
+   * controls — exposure/brightness, contrast, saturation — via Pixi's built-in
+   * colour matrix. Temperature/tint, tonal split (shadows/highlights), wheels,
+   * curves, vignette, and grain need a custom shader and are a documented
+   * refinement; leaving them out renders a *subset* of the grade, never a wrong
+   * one.
+   */
+  private applyGrade(content: Container, node: SceneNode): void {
+    const existing = this.gradeFilters.get(node.clipId);
+
+    if (!node.grade) {
+      if (existing) {
+        content.filters = [];
+        this.gradeFilters.delete(node.clipId);
+      }
+      return;
+    }
+
+    const filter = existing ?? new ColorMatrixFilter();
+    const grade = node.grade;
+
+    // Compose from a clean identity each frame so values are absolute, not
+    // accumulated across ticks.
+    filter.reset();
+    // Exposure and brightness both scale luminance; 0 stays 1×.
+    filter.brightness(1 + grade.exposure * 0.6 + grade.brightness * 0.5, true);
+    filter.contrast(grade.contrast, true);
+    filter.saturate(grade.saturation, true);
+
+    if (!existing) {
+      this.gradeFilters.set(node.clipId, filter);
+      content.filters = [filter];
+    }
   }
 
   /**

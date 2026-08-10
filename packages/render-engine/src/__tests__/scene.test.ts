@@ -3,6 +3,7 @@ import type { Clip, ProjectDocument, Track } from "@opencut/types";
 import { staticValue } from "@opencut/types";
 import { createClip, createProject, createTrack } from "@opencut/utils";
 import { createEllipseMask } from "@opencut/mask-engine";
+import { createColorGrade } from "@opencut/utils";
 import { resolveScene, sourceTimeFor } from "../scene";
 
 function videoContent(mediaId = "m1", speed = 1, sourceInFrame = 0) {
@@ -98,6 +99,61 @@ describe("resolveScene — captions", () => {
 
   it("is null with no caption tracks", () => {
     expect(resolveScene(createProject(), 0).caption).toBeNull();
+  });
+});
+
+describe("resolveScene — colour grade", () => {
+  function clipWithGrade(gradeOverride: (g: ReturnType<typeof createColorGrade>) => void): {
+    track: Track;
+    clip: Clip;
+  } {
+    const track = createTrack({ kind: "video", index: 0 });
+    const grade = createColorGrade();
+    grade.enabled = true;
+    gradeOverride(grade);
+    const clip: Clip = {
+      ...createClip({
+        trackId: track.id,
+        startFrame: 0,
+        durationFrames: 10,
+        content: videoContent(),
+      }),
+      grade,
+    };
+    return { track, clip };
+  }
+
+  it("resolves an enabled, non-neutral grade onto the node", () => {
+    const { track, clip } = clipWithGrade((g) => {
+      g.contrast = staticValue(0.4);
+    });
+    const node = resolveScene(projectWith([track], [clip]), 5).nodes[0]!;
+    expect(node.grade).not.toBeNull();
+    expect(node.grade!.contrast).toBe(0.4);
+  });
+
+  it("is null for a disabled grade", () => {
+    const { track, clip } = clipWithGrade((g) => {
+      g.enabled = false;
+      g.contrast = staticValue(0.4);
+    });
+    expect(resolveScene(projectWith([track], [clip]), 5).nodes[0]!.grade).toBeNull();
+  });
+
+  it("is null for an enabled but neutral grade, so the shader is skipped", () => {
+    const { track, clip } = clipWithGrade(() => {});
+    expect(resolveScene(projectWith([track], [clip]), 5).nodes[0]!.grade).toBeNull();
+  });
+
+  it("is null when the clip has no grade", () => {
+    const track = createTrack({ kind: "video", index: 0 });
+    const clip = createClip({
+      trackId: track.id,
+      startFrame: 0,
+      durationFrames: 10,
+      content: videoContent(),
+    });
+    expect(resolveScene(projectWith([track], [clip]), 5).nodes[0]!.grade).toBeNull();
   });
 });
 
