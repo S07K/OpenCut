@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Panel, cn } from "@opencut/ui";
 import { PropertiesPanel } from "@/features/properties/PropertiesPanel";
 import { MasksPanel } from "@/features/masks/MasksPanel";
+import { ColorPanel } from "@/features/color/ColorPanel";
 
 const TABS = ["Properties", "Masks", "Color", "Effects"] as const;
 
@@ -46,6 +47,8 @@ export function RightSidebar() {
             <PropertiesPanel />
           ) : activeTab === "Masks" ? (
             <MasksPanel />
+          ) : activeTab === "Color" ? (
+            <ColorPanel />
           ) : (
             <p className="text-text-tertiary p-3 text-xs">
               {activeTab} editing arrives in a later milestone.
