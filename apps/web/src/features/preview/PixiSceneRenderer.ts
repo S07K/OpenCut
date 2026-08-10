@@ -72,16 +72,27 @@ export class PixiSceneRenderer {
     this.cache = cache;
   }
 
-  async init(canvas: HTMLCanvasElement, width: number, height: number): Promise<void> {
+  /**
+   * Initialises the renderer against a canvas.
+   *
+   * `pixelRatio` defaults to the display density (capped at 2) for a crisp
+   * preview. Export passes `1` so the backing store is exactly the project
+   * resolution — an exported frame must be the requested pixel size, never
+   * scaled by whatever display the export happened to run on.
+   */
+  async init(
+    canvas: HTMLCanvasElement,
+    width: number,
+    height: number,
+    pixelRatio = Math.min(globalThis.devicePixelRatio || 1, 2),
+  ): Promise<void> {
     await this.app.init({
       canvas,
       width,
       height,
       backgroundAlpha: 0,
       antialias: true,
-      // Cap at 2: beyond that the memory cost outweighs any visible gain on a
-      // preview that is already scaled down from project resolution.
-      resolution: Math.min(globalThis.devicePixelRatio || 1, 2),
+      resolution: pixelRatio,
       autoDensity: true,
       preference: "webgl",
     });
@@ -100,6 +111,20 @@ export class PixiSceneRenderer {
   resize(width: number, height: number): void {
     if (!this.initialized) return;
     this.app.renderer.resize(width, height);
+  }
+
+  /**
+   * Snapshots the current canvas as a `VideoFrame` for the exporter.
+   *
+   * Reads the backing store directly, so it captures exactly what was last
+   * rendered — the same pixels the preview would show at full resolution. The
+   * caller owns the returned frame and must `close()` it.
+   */
+  captureFrame(timestampMicros: number, durationMicros: number): VideoFrame {
+    return new VideoFrame(this.app.canvas as unknown as HTMLCanvasElement, {
+      timestamp: timestampMicros,
+      duration: durationMicros,
+    });
   }
 
   /**

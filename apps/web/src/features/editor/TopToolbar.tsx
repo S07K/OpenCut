@@ -1,12 +1,23 @@
 "use client";
 
 import { useRef } from "react";
-import { Download, FolderOpen, Import, Redo2, Save, Search, Settings, Undo2 } from "lucide-react";
+import {
+  Download,
+  FolderOpen,
+  Import,
+  Redo2,
+  Save,
+  Search,
+  Settings,
+  Undo2,
+  X,
+} from "lucide-react";
 import { Button, IconButton } from "@opencut/ui";
 import { ASPECT_RATIOS, resolutionForAspect } from "@opencut/utils";
 import { useEditorStore } from "@/state/editorStore";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
 import { useProject } from "@/features/project/ProjectProvider";
+import { useExport } from "@/features/export/useExport";
 
 export function TopToolbar() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -121,10 +132,47 @@ export function TopToolbar() {
         <Save size={14} />
       </IconButton>
 
-      <Button size="sm" variant="primary" icon={<Download size={14} />}>
-        Export
-      </Button>
+      <ExportButton />
     </header>
+  );
+}
+
+/**
+ * Export control.
+ *
+ * A single primary button that runs the export and downloads the result. While
+ * a render is in flight it shows the overall percentage and offers a cancel —
+ * enough of a progress affordance to keep the editor usable; the richer dialog
+ * (format, resolution, range) lands in a later milestone. Errors surface as the
+ * button's title so a failed export is never silent.
+ */
+function ExportButton() {
+  const { isExporting, progress, error, start, cancel } = useExport();
+
+  if (isExporting) {
+    const percent = Math.round((progress?.ratio ?? 0) * 100);
+    return (
+      <div className="flex items-center gap-1">
+        <Button size="sm" variant="primary" disabled icon={<Download size={14} />}>
+          Exporting… {percent}%
+        </Button>
+        <IconButton size="sm" label="Cancel export" onClick={cancel}>
+          <X size={14} />
+        </IconButton>
+      </div>
+    );
+  }
+
+  return (
+    <Button
+      size="sm"
+      variant="primary"
+      icon={<Download size={14} />}
+      onClick={start}
+      title={error ? `Export failed: ${error}` : "Export video"}
+    >
+      Export
+    </Button>
   );
 }
 
