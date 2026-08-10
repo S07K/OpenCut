@@ -1,82 +1,50 @@
 "use client";
 
-import { ArrayBufferTarget as Mp4Target, Muxer as Mp4Muxer } from "mp4-muxer";
-import { ArrayBufferTarget as WebmTarget, Muxer as WebmMuxer } from "webm-muxer";
 import type { ExportPlan, VideoWriter } from "@opencut/export-engine";
-import { resolveVideoConfig } from "./capabilities";
+import type { MediaContainer } from "./MediaContainer";
+import type { ResolvedVideoConfig } from "./capabilities";
 
 /**
- * A VideoWriter backed by WebCodecs + an in-memory MP4/WebM muxer.
+ * A VideoWriter that encodes frames with WebCodecs into a shared MediaContainer.
  *
- * It binds the engine's opaque `TFrame` to the real `VideoFrame` and turns a
- * stream of composited frames into container bytes. The engine drives *when*
- * each frame is written and at what timestamp; this class owns *how* — encoder
- * configuration, keyframe cadence, backpressure, and muxing.
+ * The engine drives *when* each frame is written and at what timestamp; this
+ * class owns *how* — encoder configuration, keyframe cadence, and backpressure.
+ * The muxer lives in the container (shared with the audio track), so this
+ * writer's `finalize` flushes the video encoder and then finalises the whole
+ * file — by which point any audio has already been muxed in.
  *
- * Two correctness details worth stating:
- * - Timestamps come from the engine, not the source frame. Each frame is
- *   re-wrapped with the engine's explicit PTS/duration before encoding, so the
- *   encoded chunk's own timestamp is exact and the muxer needs no override. The
- *   encoder runs in `realtime` latency mode, which disables B-frames, so decode
- *   order equals presentation order and no composition-time bookkeeping is
- *   needed.
- * - Backpressure is honoured. Encoding is async; without waiting on the queue a
- *   long export would buffer every frame in memory at once.
+ * Two correctness details:
+ * - Timestamps come from the engine, not the source frame: each frame is
+ *   re-wrapped with the engine's PTS/duration before encoding, so the chunk's
+ *   own timestamp is exact and the muxer needs no override. The encoder runs in
+ *   `realtime` latency mode, disabling B-frames, so decode order == presentation
+ *   order and no composition-time bookkeeping is needed.
+ * - Backpressure is honoured via the encoder's `dequeue` event, so a long export
+ *   doesn't buffer every frame in memory at once.
  */
-
-type Container =
-  { kind: "mp4"; muxer: Mp4Muxer<Mp4Target> } | { kind: "webm"; muxer: WebmMuxer<WebmTarget> };
-
 export class WebCodecsVideoWriter implements VideoWriter<VideoFrame> {
   private readonly encoder: VideoEncoder;
-  private readonly container: Container;
+  private readonly container: MediaContainer;
   private framesEncoded = 0;
   private readonly keyFrameInterval: number;
   /** The first fatal encoder error, surfaced on the next call. */
   private failure: Error | null = null;
-  private finalized = false;
 
-  private constructor(encoder: VideoEncoder, container: Container, keyFrameInterval: number) {
+  private constructor(encoder: VideoEncoder, container: MediaContainer, keyFrameInterval: number) {
     this.encoder = encoder;
     this.container = container;
     this.keyFrameInterval = keyFrameInterval;
   }
 
-  /** Probes support, configures the encoder, and wires it to the muxer. */
-  static async create(plan: ExportPlan): Promise<WebCodecsVideoWriter> {
-    const resolved = await resolveVideoConfig(plan);
-    const { width, height } = plan.resolution;
-
-    // A keyframe every ~2 seconds: enough seek granularity without inflating
-    // the file the way all-keyframe output would.
+  /** Configures a video encoder that feeds the shared container. */
+  static create(
+    plan: ExportPlan,
+    container: MediaContainer,
+    config: ResolvedVideoConfig,
+  ): WebCodecsVideoWriter {
+    // A keyframe every ~2 seconds: enough seek granularity without inflating the
+    // file the way all-keyframe output would.
     const keyFrameInterval = Math.max(1, Math.round(plan.frameRate * 2));
-
-    let container: Container;
-    let addChunk: (chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata) => void;
-
-    if (plan.format === "webm") {
-      const muxer = new WebmMuxer({
-        target: new WebmTarget(),
-        video: { codec: resolved.muxerCodec, width, height, frameRate: plan.frameRate },
-        firstTimestampBehavior: "offset",
-      });
-      container = { kind: "webm", muxer };
-      addChunk = (chunk, meta) => muxer.addVideoChunk(chunk, meta);
-    } else {
-      const muxer = new Mp4Muxer({
-        target: new Mp4Target(),
-        video: {
-          codec: resolved.muxerCodec as "avc" | "hevc" | "vp9" | "av1",
-          width,
-          height,
-          frameRate: plan.frameRate,
-        },
-        fastStart: "in-memory",
-        firstTimestampBehavior: "offset",
-      });
-      container = { kind: "mp4", muxer };
-      addChunk = (chunk, meta) => muxer.addVideoChunk(chunk, meta);
-    }
 
     const writer = new WebCodecsVideoWriter(
       new VideoEncoder({
@@ -84,7 +52,7 @@ export class WebCodecsVideoWriter implements VideoWriter<VideoFrame> {
         // before encoding), so the muxer needs no timestamp override.
         output: (chunk, meta) => {
           try {
-            addChunk(chunk, meta);
+            container.addVideoChunk(chunk, meta);
           } catch (error) {
             writer.failure ??= asError(error);
           }
@@ -98,7 +66,7 @@ export class WebCodecsVideoWriter implements VideoWriter<VideoFrame> {
     );
 
     // realtime mode disables B-frames, keeping decode order == presentation order.
-    writer.encoder.configure({ ...resolved.encoderConfig, latencyMode: "realtime" });
+    writer.encoder.configure({ ...config.encoderConfig, latencyMode: "realtime" });
     return writer;
   }
 
@@ -109,8 +77,7 @@ export class WebCodecsVideoWriter implements VideoWriter<VideoFrame> {
   ): Promise<void> {
     if (this.failure) throw this.failure;
 
-    // Backpressure: let the encoder drain before piling on more work, so peak
-    // memory stays bounded on long exports.
+    // Backpressure: let the encoder drain before piling on more work.
     while (this.encoder.encodeQueueSize > 8) {
       await waitForDequeue(this.encoder);
       if (this.failure) throw this.failure;
@@ -131,26 +98,16 @@ export class WebCodecsVideoWriter implements VideoWriter<VideoFrame> {
     this.framesEncoded += 1;
   }
 
+  /** Flushes the video encoder and finalises the whole container. */
   async finalize(): Promise<Uint8Array> {
     if (this.failure) throw this.failure;
     await this.encoder.flush();
     if (this.failure) throw this.failure;
-
-    this.finalized = true;
-    if (this.container.kind === "mp4") {
-      this.container.muxer.finalize();
-      return new Uint8Array(this.container.muxer.target.buffer);
-    }
-    this.container.muxer.finalize();
-    return new Uint8Array(this.container.muxer.target.buffer);
+    return this.container.finalize();
   }
 
   dispose(): void {
-    // finalize() already closes the encoder via flush(); only close here when we
-    // are tearing down early (error or cancel) to avoid a double close.
-    if (!this.finalized && this.encoder.state !== "closed") {
-      this.encoder.close();
-    }
+    if (this.encoder.state !== "closed") this.encoder.close();
   }
 }
 

@@ -1,12 +1,20 @@
 "use client";
 
 import type { MediaBlobStore } from "@opencut/media-engine";
-import { planExport, runVideoExport, type ExportProgress } from "@opencut/export-engine";
+import {
+  ExportCancelledError,
+  planExport,
+  runVideoExport,
+  type ExportProgress,
+} from "@opencut/export-engine";
 import type { ProjectDocument } from "@opencut/types";
 import { MediaTextureCache } from "@/features/preview/MediaTextureCache";
-import { isExportSupported } from "./capabilities";
+import { isExportSupported, resolveAudioConfig, resolveVideoConfig } from "./capabilities";
+import { MediaContainer } from "./MediaContainer";
 import { PixiExportFrameSource } from "./PixiExportFrameSource";
 import { WebCodecsVideoWriter } from "./WebCodecsVideoWriter";
+import { mixProjectAudio } from "./mixAudio";
+import { encodeAudioBuffer } from "./encodeAudio";
 
 export interface ExportResult {
   blob: Blob;
@@ -27,10 +35,12 @@ const MIME_BY_FORMAT: Partial<Record<ProjectDocument["exportSettings"]["format"]
  * Renders and encodes a project to a video Blob using the project's own export
  * settings.
  *
- * This is the top of the browser export stack: it assembles the pure engine
- * plan, the Pixi frame source, and the WebCodecs writer, then hands them to the
- * engine's orchestrator. Everything hard — the loop, timing, progress, cancel —
- * lives in the engine; this function just wires the browser pieces together.
+ * The order is deliberate: audio is mixed and encoded into the shared container
+ * *first* (it's cheap and one-shot), then the video loop runs through the
+ * engine's orchestrator, whose final step finalises the container with both
+ * tracks in place. Everything hard — the frame loop, timing, progress, cancel —
+ * lives in the engine; this function wires the browser pieces together and
+ * degrades to video-only when there's no audio or the browser can't encode it.
  */
 export async function exportProjectToBlob(
   project: ProjectDocument,
@@ -45,6 +55,26 @@ export async function exportProjectToBlob(
 
   const settings = project.exportSettings;
   const plan = planExport(project, settings);
+  const throwIfCancelled = () => {
+    if (options.signal?.aborted) throw new ExportCancelledError();
+  };
+
+  const videoConfig = await resolveVideoConfig(plan);
+
+  // Mix + resolve the audio track up front; either step may legitimately yield
+  // nothing (no audio clips, audio disabled, or unsupported), in which case the
+  // export is video-only.
+  const mixed = plan.audioCodec === "none" ? null : await mixProjectAudio(project, store, plan);
+  throwIfCancelled();
+  const audioConfig = mixed
+    ? await resolveAudioConfig(plan, mixed.numberOfChannels, mixed.sampleRate)
+    : null;
+
+  const container = MediaContainer.create(plan, videoConfig, audioConfig);
+  if (mixed && audioConfig) {
+    await encodeAudioBuffer(mixed, audioConfig, container);
+  }
+  throwIfCancelled();
 
   const cache = new MediaTextureCache(store);
   const frameSource = await PixiExportFrameSource.create(
@@ -53,7 +83,7 @@ export async function exportProjectToBlob(
     plan.resolution,
     plan.frameRate,
   );
-  const videoWriter = await WebCodecsVideoWriter.create(plan);
+  const videoWriter = WebCodecsVideoWriter.create(plan, container, videoConfig);
 
   const bytes = await runVideoExport({
     plan,

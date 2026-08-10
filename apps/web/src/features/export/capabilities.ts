@@ -1,7 +1,7 @@
 "use client";
 
 import type { ExportPlan } from "@opencut/export-engine";
-import { videoCodecString } from "@opencut/export-engine";
+import { audioCodecString, videoCodecString } from "@opencut/export-engine";
 import type { ExportSettings } from "@opencut/types";
 
 /**
@@ -98,4 +98,60 @@ function muxerCodec(
     default:
       return "avc";
   }
+}
+
+/** The muxer's audio codec label. mp4-muxer wants 'aac'/'opus'; webm wants 'A_OPUS'. */
+export type MuxerAudioCodec = "aac" | "opus" | "A_OPUS";
+
+export interface ResolvedAudioConfig {
+  encoderConfig: AudioEncoderConfig;
+  muxerCodec: MuxerAudioCodec;
+}
+
+/**
+ * Finds a supported AudioEncoder config for the plan's container and the mix's
+ * channel/sample layout. WebM only carries Opus; MP4 prefers AAC then Opus.
+ * Returns null when audio is disabled or nothing is supported (export then
+ * proceeds video-only rather than failing).
+ */
+export async function resolveAudioConfig(
+  plan: ExportPlan,
+  numberOfChannels: number,
+  sampleRate: number,
+): Promise<ResolvedAudioConfig | null> {
+  if (plan.audioCodec === "none") return null;
+  if (typeof globalThis.AudioEncoder === "undefined") return null;
+
+  const candidates: ExportSettings["audioCodec"][] =
+    plan.format === "webm"
+      ? ["opus"]
+      : plan.audioCodec === "opus"
+        ? ["opus", "aac"]
+        : ["aac", "opus"];
+
+  for (const codec of candidates) {
+    const codecString = audioCodecString(codec);
+    if (!codecString) continue;
+
+    const encoderConfig: AudioEncoderConfig = {
+      codec: codecString,
+      sampleRate,
+      numberOfChannels,
+      bitrate: plan.audioBitrate,
+    };
+    const support = await AudioEncoder.isConfigSupported(encoderConfig);
+    if (support.supported && support.config) {
+      return { encoderConfig: support.config, muxerCodec: muxerAudioCodec(plan.format, codec) };
+    }
+  }
+
+  return null;
+}
+
+function muxerAudioCodec(
+  format: ExportPlan["format"],
+  codec: ExportSettings["audioCodec"],
+): MuxerAudioCodec {
+  if (format === "webm") return "A_OPUS";
+  return codec === "opus" ? "opus" : "aac";
 }
