@@ -7,3 +7,4 @@
 
 export { createId } from "./id";
 export * from "./factories";
+export * from "./aspect";

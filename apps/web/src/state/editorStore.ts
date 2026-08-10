@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import type {
+  AspectRatioPreset,
   CaptionTrackData,
   Clip,
   Frame,
@@ -107,6 +108,8 @@ export interface EditorState {
   /** Swaps in a whole document, on project load or restore. */
   replaceProject: (project: ProjectDocument) => void;
   renameProject: (name: string) => void;
+  /** Switches the project's output aspect ratio (and resolution). */
+  setAspectRatio: (id: AspectRatioPreset, resolution: { width: number; height: number }) => void;
 
   undo: () => void;
   redo: () => void;
@@ -345,6 +348,19 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
     set((state) =>
       // Merged, so typing a name is one undo step rather than one per keystroke.
       commit(state, { ...state.project, name, modifiedAt: Date.now() }, "Rename project", "rename"),
+    ),
+
+  setAspectRatio: (id, resolution) =>
+    set((state) =>
+      commit(
+        state,
+        {
+          ...state.project,
+          settings: { ...state.project.settings, aspectRatio: id, resolution },
+          modifiedAt: Date.now(),
+        },
+        `Aspect ratio ${id}`,
+      ),
     ),
 
   endGesture: () => set((state) => ({ history: historySeal(state.history) })),

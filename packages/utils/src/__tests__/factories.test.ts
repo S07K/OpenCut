@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { staticValue, SCHEMA_VERSION } from "@opencut/types";
 import { createClip, createProject, createTrack } from "../factories";
 import { createId } from "../id";
+import { ASPECT_RATIOS, aspectForResolution, resolutionForAspect } from "../aspect";
 
 describe("createProject", () => {
   it("stamps the current schema version", () => {
@@ -125,5 +126,38 @@ describe("createId", () => {
 
   it("applies a prefix when given", () => {
     expect(createId("clip").startsWith("clip_")).toBe(true);
+  });
+});
+
+describe("aspect ratios", () => {
+  it("gives 16:9 a landscape 1920-wide resolution", () => {
+    const size = resolutionForAspect(16 / 9);
+    expect(size.width).toBe(1920);
+    expect(size.height).toBe(1080);
+  });
+
+  it("gives 9:16 a portrait 1920-tall resolution", () => {
+    const size = resolutionForAspect(9 / 16);
+    expect(size.width).toBe(1080);
+    expect(size.height).toBe(1920);
+  });
+
+  it("makes 1:1 square", () => {
+    const size = resolutionForAspect(1);
+    expect(size.width).toBe(size.height);
+  });
+
+  it("always produces even dimensions (codecs require it)", () => {
+    for (const option of ASPECT_RATIOS) {
+      const size = resolutionForAspect(option.ratio);
+      expect(size.width % 2).toBe(0);
+      expect(size.height % 2).toBe(0);
+    }
+  });
+
+  it("round-trips a resolution back to its preset id", () => {
+    expect(aspectForResolution({ width: 1920, height: 1080 })).toBe("16:9");
+    expect(aspectForResolution({ width: 1080, height: 1920 })).toBe("9:16");
+    expect(aspectForResolution({ width: 1000, height: 333 })).toBe("custom");
   });
 });

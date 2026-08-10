@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { Download, FolderOpen, Import, Redo2, Save, Search, Settings, Undo2 } from "lucide-react";
 import { Button, IconButton } from "@opencut/ui";
+import { ASPECT_RATIOS, resolutionForAspect } from "@opencut/utils";
 import { useEditorStore } from "@/state/editorStore";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
 import { useProject } from "@/features/project/ProjectProvider";
@@ -84,6 +85,7 @@ export function TopToolbar() {
             onChange={(event) => renameProject(event.target.value)}
             className="text-text-primary hover:bg-surface-raised focus:bg-surface-input w-48 rounded-xs bg-transparent px-1 text-center text-xs font-medium focus:outline-none"
           />
+          <AspectRatioMenu />
           <span className="tabular text-text-tertiary">
             {resolution.width}×{resolution.height} · {fps}fps
           </span>
@@ -123,5 +125,36 @@ export function TopToolbar() {
         Export
       </Button>
     </header>
+  );
+}
+
+/**
+ * Aspect-ratio switcher.
+ *
+ * A native <select> rather than a custom menu — it is keyboard-accessible for
+ * free and this is a low-frequency control that does not warrant bespoke
+ * popover chrome. Switching recomputes the resolution via the pure helper.
+ */
+function AspectRatioMenu() {
+  const aspect = useEditorStore((state) => state.project.settings.aspectRatio);
+  const setAspectRatio = useEditorStore((state) => state.setAspectRatio);
+
+  return (
+    <select
+      aria-label="Aspect ratio"
+      value={aspect === "custom" ? "" : aspect}
+      onChange={(event) => {
+        const option = ASPECT_RATIOS.find((o) => o.id === event.target.value);
+        if (option) setAspectRatio(option.id, resolutionForAspect(option.ratio));
+      }}
+      className="bg-surface-input text-text-secondary hover:text-text-primary rounded-xs px-1 py-0.5 text-xs focus:outline-none"
+    >
+      {aspect === "custom" && <option value="">Custom</option>}
+      {ASPECT_RATIOS.map((option) => (
+        <option key={option.id} value={option.id}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }
