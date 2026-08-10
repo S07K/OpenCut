@@ -16,22 +16,24 @@ interface PreviewStageProps {
 /**
  * Mounts the PixiJS renderer and keeps it in step with the document.
  *
- * React owns the canvas element and nothing else. Pixi is imperative and
- * stateful, so it lives behind a ref and is driven by effects rather than by
- * rendering — trying to express a WebGL scene graph as JSX would mean rebuilding
- * display objects on every store change.
+ * React owns a container <div>, and every Pixi Application gets its **own**
+ * freshly-created <canvas> inside it — never a shared, React-owned one. This is
+ * deliberate: Pixi's init is async, and React StrictMode (and HMR) mount the
+ * effect twice with cleanup in between. If two Applications ever shared one
+ * canvas, tearing down the first would release that canvas's WebGL context and
+ * kill the second — surfacing as "could not initialise shader" / "context
+ * lost", with a video clip widening the race because its texture init waits on
+ * `onloadeddata`. Isolating a canvas per Application makes teardown harmless.
  */
 export function PreviewStage({ width, height }: PreviewStageProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<PixiSceneRenderer | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   /**
-   * Probed once, lazily, rather than inside the init effect.
-   *
-   * Doing it in the effect would mean a synchronous `setState` during an
-   * effect body, which cascades an extra render. Safe as a state initializer
-   * because the parent only mounts this component after measuring a non-zero
+   * Probed once, lazily. Doing it in the init effect would mean a synchronous
+   * setState during an effect body, cascading an extra render. Safe as a state
+   * initializer because the parent only mounts this after measuring a non-zero
    * size, so it never runs during server rendering.
    */
   const [webglSupport] = useState(probeWebGLSupport);
@@ -46,57 +48,46 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
   const playhead = useEditorStore((state) => state.playhead);
   const isPlaying = useEditorStore((state) => state.isPlaying);
 
-  /**
-   * WebGL contexts can be taken away at any time — a GPU driver reset, too many
-   * live contexts on the page, or an OS power event. The browser will not
-   * recover on its own, and a lost context renders as an unexplained blank
-   * frame, so it is detected explicitly and rebuilt when the browser offers it
-   * back.
-   */
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!container) return;
+    if (!webglSupport.supported) return;
 
+    // A canvas owned by this Application alone. It is added to the container now
+    // and removed on teardown, so no other instance ever touches its context.
+    const canvas = document.createElement("canvas");
+    canvas.className = "absolute inset-0 h-full w-full";
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    container.appendChild(canvas);
+
+    /**
+     * WebGL contexts can be taken away at any time — a GPU driver reset, too
+     * many live contexts, or an OS power event. The browser will not recover on
+     * its own and a lost context renders as an unexplained blank frame, so it is
+     * detected explicitly and rebuilt when the browser offers it back. Listeners
+     * live on *this* canvas so they die with it.
+     */
     const handleLost = (event: Event) => {
-      // Without preventDefault the browser will never fire a restore event.
+      // Without preventDefault the browser never fires a restore event.
       event.preventDefault();
       setInitError("Graphics context was lost");
       setIsReady(false);
     };
-
     const handleRestored = () => {
       setInitError(null);
       setContextEpoch((value) => value + 1);
     };
-
     canvas.addEventListener("webglcontextlost", handleLost);
     canvas.addEventListener("webglcontextrestored", handleRestored);
-
-    return () => {
-      canvas.removeEventListener("webglcontextlost", handleLost);
-      canvas.removeEventListener("webglcontextrestored", handleRestored);
-    };
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    if (!webglSupport.supported) return;
 
     const cache = new MediaTextureCache(store());
     const renderer = new PixiSceneRenderer(cache);
     let disposed = false;
 
-    /**
-     * Pixi's init is async but React's cleanup is synchronous, and in
-     * StrictMode the effect is deliberately mounted twice. Tearing down while
-     * init is still in flight leaves a half-built Application holding a WebGL
-     * context, and the next instance then fails to compile its shaders.
-     *
-     * Holding the init promise and disposing only after it settles makes the
-     * teardown ordering correct in both StrictMode and production.
-     */
+    // Pixi's init is async but React cleanup is synchronous. Hold the promise
+    // and dispose only after it settles, so a StrictMode double-mount tears down
+    // in the right order instead of leaving a half-built Application.
     const ready = renderer
       .init(canvas, width, height)
       .then(() => {
@@ -116,14 +107,17 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
       disposed = true;
       setIsReady(false);
       rendererRef.current = null;
+      canvas.removeEventListener("webglcontextlost", handleLost);
+      canvas.removeEventListener("webglcontextrestored", handleRestored);
 
       void ready.then(() => {
         renderer.destroy();
         cache.destroy();
+        canvas.remove();
       });
     };
-    // Mount-only by design: resizing is handled below rather than by rebuilding
-    // the WebGL context, which would drop every uploaded texture.
+    // Mount-only by design (plus context rebuild): resizing is handled below
+    // rather than by recreating the context, which would drop uploaded textures.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store, contextEpoch, webglSupport]);
 
@@ -145,17 +139,12 @@ export function PreviewStage({ width, height }: PreviewStageProps) {
   const displayError = initError ?? (webglSupport.supported ? null : webglSupport.reason);
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 h-full w-full"
-        style={{ width, height, visibility: displayError ? "hidden" : "visible" }}
-      />
+    <div ref={containerRef} className="absolute inset-0 h-full w-full">
       {displayError && (
         <div className="absolute inset-0 grid place-items-center p-4 text-center">
           <p className="text-danger text-xs">Preview renderer unavailable: {displayError}</p>
         </div>
       )}
-    </>
+    </div>
   );
 }
