@@ -7,7 +7,7 @@ import {
   runVideoExport,
   type ExportProgress,
 } from "@opencut/export-engine";
-import type { ProjectDocument } from "@opencut/types";
+import type { ExportSettings, ProjectDocument } from "@opencut/types";
 import { MediaTextureCache } from "@/features/preview/MediaTextureCache";
 import { isExportSupported, resolveAudioConfig, resolveVideoConfig } from "./capabilities";
 import { MediaContainer } from "./MediaContainer";
@@ -24,6 +24,8 @@ export interface ExportResult {
 export interface ExportProjectOptions {
   signal?: AbortSignal;
   onProgress?: (progress: ExportProgress) => void;
+  /** Overrides the project's stored export settings for this run. */
+  settings?: ExportSettings;
 }
 
 const MIME_BY_FORMAT: Partial<Record<ProjectDocument["exportSettings"]["format"], string>> = {
@@ -53,7 +55,7 @@ export async function exportProjectToBlob(
     );
   }
 
-  const settings = project.exportSettings;
+  const settings = options.settings ?? project.exportSettings;
   const plan = planExport(project, settings);
   const throwIfCancelled = () => {
     if (options.signal?.aborted) throw new ExportCancelledError();
