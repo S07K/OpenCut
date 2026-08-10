@@ -5,6 +5,7 @@ import { Panel, cn } from "@opencut/ui";
 import { PropertiesPanel } from "@/features/properties/PropertiesPanel";
 import { MasksPanel } from "@/features/masks/MasksPanel";
 import { ColorPanel } from "@/features/color/ColorPanel";
+import { EffectsPanel } from "@/features/effects/EffectsPanel";
 
 const TABS = ["Properties", "Masks", "Color", "Effects"] as const;
 
@@ -50,9 +51,7 @@ export function RightSidebar() {
           ) : activeTab === "Color" ? (
             <ColorPanel />
           ) : (
-            <p className="text-text-tertiary p-3 text-xs">
-              {activeTab} editing arrives in a later milestone.
-            </p>
+            <EffectsPanel />
           )}
         </div>
       </div>

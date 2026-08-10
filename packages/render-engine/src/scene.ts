@@ -29,6 +29,7 @@ import { evaluate } from "@opencut/animation-engine";
 import { resolveMasks, type ResolvedMask } from "@opencut/mask-engine";
 import { activeWordIndex, blockAtFrame, getCaptionPreset } from "@opencut/caption-engine";
 import { isNeutralGrade, resolveGrade, type ResolvedGrade } from "@opencut/color-engine";
+import { resolveEffects, type ResolvedEffect } from "@opencut/effects-engine";
 
 /** A transform with every animated property resolved to a concrete value. */
 export interface ResolvedTransform {
@@ -119,6 +120,12 @@ export interface SceneNode {
    * compositor skips the shader pass entirely.
    */
   grade: ResolvedGrade | null;
+  /**
+   * The clip's effect stack resolved for this frame, in application order.
+   * Empty when the clip has no enabled effects. Each entry is a registry id
+   * plus flat parameter values; the compositor maps ids to renderer filters.
+   */
+  effects: ResolvedEffect[];
 }
 
 export interface AudioNode {
@@ -362,6 +369,7 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
         content,
         masks: resolveMasks(clip.masks, frame),
         grade: resolveClipGrade(clip, frame),
+        effects: resolveEffects(clip.effects, frame),
       });
     }
   });

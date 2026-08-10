@@ -2,14 +2,19 @@
 
 import {
   Application,
+  BlurFilter,
   ColorMatrixFilter,
   Container,
+  type Filter,
   Graphics,
+  NoiseFilter,
   Sprite,
   Text,
   TextStyle,
 } from "pixi.js";
 import type { Scene, SceneNode } from "@opencut/render-engine";
+import type { ResolvedEffect } from "@opencut/effects-engine";
+import { EFFECT_BLUR, EFFECT_NOISE } from "@opencut/effects-engine";
 import type { ResolvedMask } from "@opencut/mask-engine";
 import type { Id, MediaAsset } from "@opencut/types";
 import { MediaTextureCache } from "./MediaTextureCache";
@@ -42,6 +47,16 @@ export class PixiSceneRenderer {
   private readonly maskGraphics = new Map<Id, Graphics>();
   /** Per-node colour-grade filter, reused across frames. */
   private readonly gradeFilters = new Map<Id, ColorMatrixFilter>();
+  /** Per-node effect filters, aligned to the node's effect stack order. */
+  private readonly effectFilters = new Map<Id, Filter[]>();
+  /** The effect-stack shape (ids joined) a node's effect filters were built for. */
+  private readonly effectKeys = new Map<Id, string>();
+  /**
+   * The effect-stack shape a node's filters were last built for (its effect ids
+   * joined). When it changes, the filter objects are rebuilt; otherwise only
+   * their parameters are updated, keeping steady-state cost to assignment.
+   */
+  private readonly filterKeys = new Map<Id, string>();
   private readonly cache: MediaTextureCache;
 
   private initialized = false;
@@ -128,6 +143,10 @@ export class PixiSceneRenderer {
       // just drop the map entry so it is not reused against a destroyed object.
       this.maskGraphics.delete(clipId);
       this.gradeFilters.delete(clipId);
+      this.effectFilters.get(clipId)?.forEach((f) => f.destroy());
+      this.effectFilters.delete(clipId);
+      this.effectKeys.delete(clipId);
+      this.filterKeys.delete(clipId);
       container.destroy({ children: true });
       this.nodes.delete(clipId);
     }
@@ -159,11 +178,35 @@ export class PixiSceneRenderer {
     this.applyTransform(container, node);
     this.updateContent(container, node, assets);
     this.applyMasks(container, node);
-    this.applyGrade(container, node);
+    this.applyFilters(container, node);
   }
 
   /**
-   * Applies the node's colour grade as a ColorMatrixFilter.
+   * Applies the node's colour grade and effect stack as Pixi filters.
+   *
+   * Grade and effects share one filters array — the grade runs first (colour is
+   * a property of the source), then effects in stack order. The array is only
+   * reassigned when its membership changes (the grade toggles or the effect
+   * shape changes); otherwise filter parameters are updated in place, so a
+   * steady-state frame costs assignment, not allocation. The filter *objects*
+   * are reused across frames and torn down with the node.
+   */
+  private applyFilters(content: Container, node: SceneNode): void {
+    const grade = this.syncGradeFilter(node);
+    const effects = this.syncEffectFilters(node);
+
+    // Reassign the array only when membership changes; params update in place.
+    const key = `${grade ? "g" : "-"}|${node.effects.map((e) => e.effectId).join(",")}`;
+    if (this.filterKeys.get(node.clipId) !== key) {
+      const filters = grade ? [grade, ...effects] : effects;
+      content.filters = filters;
+      this.filterKeys.set(node.clipId, key);
+    }
+  }
+
+  /**
+   * Reconciles the node's colour grade into its ColorMatrixFilter, returning the
+   * filter or null when the clip has no grade.
    *
    * The scene resolver hands over a fully-numeric grade (or null for neutral),
    * so this stays a dumb mapping onto filter methods. Covers the high-impact
@@ -173,18 +216,13 @@ export class PixiSceneRenderer {
    * refinement; leaving them out renders a *subset* of the grade, never a wrong
    * one.
    */
-  private applyGrade(content: Container, node: SceneNode): void {
-    const existing = this.gradeFilters.get(node.clipId);
-
+  private syncGradeFilter(node: SceneNode): ColorMatrixFilter | null {
     if (!node.grade) {
-      if (existing) {
-        content.filters = [];
-        this.gradeFilters.delete(node.clipId);
-      }
-      return;
+      this.gradeFilters.delete(node.clipId);
+      return null;
     }
 
-    const filter = existing ?? new ColorMatrixFilter();
+    const filter = this.gradeFilters.get(node.clipId) ?? new ColorMatrixFilter();
     const grade = node.grade;
 
     // Compose from a clean identity each frame so values are absolute, not
@@ -195,9 +233,63 @@ export class PixiSceneRenderer {
     filter.contrast(grade.contrast, true);
     filter.saturate(grade.saturation, true);
 
-    if (!existing) {
-      this.gradeFilters.set(node.clipId, filter);
-      content.filters = [filter];
+    this.gradeFilters.set(node.clipId, filter);
+    return filter;
+  }
+
+  /**
+   * Reconciles the node's effect stack into its filter list.
+   *
+   * Filters are rebuilt only when the stack's shape changes (an effect added,
+   * removed, or reordered); otherwise the existing objects are reused and their
+   * parameters updated for this frame. Effect ids the compositor cannot draw are
+   * skipped rather than faked — the documented degradation for an effect whose
+   * plugin renderer is absent.
+   */
+  private syncEffectFilters(node: SceneNode): Filter[] {
+    const key = node.effects.map((e) => e.effectId).join(",");
+    let filters = this.effectFilters.get(node.clipId);
+
+    if (!filters || this.effectKeys.get(node.clipId) !== key) {
+      filters?.forEach((f) => f.destroy());
+      filters = node.effects
+        .map((effect) => this.createEffectFilter(effect))
+        .filter((f): f is Filter => f !== null);
+      this.effectFilters.set(node.clipId, filters);
+      this.effectKeys.set(node.clipId, key);
+    }
+
+    // Parameters are updated every frame so animated effect values track the
+    // playhead; the array indices line up with the drawable effects.
+    let i = 0;
+    for (const effect of node.effects) {
+      const filter = filters[i];
+      if (filter) {
+        this.updateEffectFilter(filter, effect);
+        i += 1;
+      }
+    }
+
+    return filters;
+  }
+
+  private createEffectFilter(effect: ResolvedEffect): Filter | null {
+    switch (effect.effectId) {
+      case EFFECT_BLUR:
+        return new BlurFilter();
+      case EFFECT_NOISE:
+        return new NoiseFilter();
+      default:
+        return null;
+    }
+  }
+
+  private updateEffectFilter(filter: Filter, effect: ResolvedEffect): void {
+    if (filter instanceof BlurFilter) {
+      // Normalised strength maps to a pixel radius; 40px is a heavy blur.
+      filter.strength = Number(effect.params.strength ?? 0) * 40;
+    } else if (filter instanceof NoiseFilter) {
+      filter.noise = Number(effect.params.amount ?? 0);
     }
   }
 

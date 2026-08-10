@@ -18,13 +18,15 @@
     "@opencut/animation-engine": "workspace:*",
     "@opencut/mask-engine": "workspace:*",
     "@opencut/caption-engine": "workspace:*",
-    "@opencut/color-engine": "workspace:*"
+    "@opencut/color-engine": "workspace:*",
+    "@opencut/effects-engine": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.8",
     "@opencut/utils": "workspace:*",
     "@opencut/mask-engine": "workspace:*",
     "@opencut/caption-engine": "workspace:*",
-    "@opencut/color-engine": "workspace:*"
+    "@opencut/color-engine": "workspace:*",
+    "@opencut/effects-engine": "workspace:*"
   }
 }
