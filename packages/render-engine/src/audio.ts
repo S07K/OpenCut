@@ -2,20 +2,58 @@
  * Resolving the project's audio into a flat, mixable timeline.
  *
  * The realtime preview plays audio a frame at a time; export needs the whole
- * thing laid out at once to render offline. This module turns audio-track clips
- * into placements — where each starts in the output, where it reads from its
- * source, how long, how loud — using the *same* audibility rules as
- * `resolveScene` (solo overrides mute, per-track gain), so the exported mix
- * matches what the editor plays. Pure and DOM-free; the OfflineAudioContext
- * mixing lives in the adapter.
- *
- * Scope note: like `resolveScene`, only clips on audio tracks contribute. A
- * video clip's embedded audio is silent in preview today, so it is silent here
- * too — closing that gap belongs in the resolver, where it fixes both at once.
+ * thing laid out at once to render offline. This module turns every audible clip
+ * — audio-track clips *and* video clips that carry an audio stream — into
+ * placements: where each starts in the output, where it reads from its source,
+ * how long, how loud. It is the single source of truth for audibility, consumed
+ * by both the export mixer and the preview's scheduler, so what you hear while
+ * editing is exactly what lands in the file. Pure and DOM-free; the actual Web
+ * Audio mixing lives in the adapters.
  */
 
-import type { Frame, ProjectDocument } from "@opencut/types";
+import type { Animatable, Clip, Frame, ProjectDocument, Unit } from "@opencut/types";
 import { evaluate } from "@opencut/animation-engine";
+
+/** The audio-bearing fields shared by audio clips and video clips. */
+interface ClipAudio {
+  mediaId: string;
+  sourceInFrame: number;
+  speed: number;
+  volume: Animatable<Unit>;
+  muted: boolean;
+  fadeInFrames: number;
+  fadeOutFrames: number;
+}
+
+/** The audio source of a clip, or null for clips that carry no audio. */
+function clipAudioOf(clip: Clip): ClipAudio | null {
+  if (clip.content.kind === "audio") {
+    const c = clip.content;
+    return {
+      mediaId: c.mediaId,
+      sourceInFrame: c.sourceInFrame,
+      speed: c.speed,
+      volume: c.volume,
+      muted: c.muted,
+      fadeInFrames: c.fadeInFrames,
+      fadeOutFrames: c.fadeOutFrames,
+    };
+  }
+  if (clip.content.kind === "video") {
+    const c = clip.content;
+    // A video clip's embedded audio has no fade controls of its own yet.
+    return {
+      mediaId: c.mediaId,
+      sourceInFrame: c.sourceInFrame,
+      speed: c.speed,
+      volume: c.volume,
+      muted: c.muted,
+      fadeInFrames: 0,
+      fadeOutFrames: 0,
+    };
+  }
+  return null;
+}
 
 /** One audio clip placed on the output timeline, ready to schedule for mixing. */
 export interface ResolvedAudioClip {
@@ -56,14 +94,23 @@ export function resolveAudioTimeline(
   const resolved: ResolvedAudioClip[] = [];
 
   for (const clip of Object.values(entities.clips)) {
-    if (clip.content.kind !== "audio") continue;
-    if (clip.hidden || clip.content.muted) continue;
+    const audio = clipAudioOf(clip);
+    if (!audio) continue;
+    if (clip.hidden || audio.muted) continue;
 
     const track = entities.tracks[clip.trackId];
-    if (!track || track.kind !== "audio") continue;
+    if (!track) continue;
 
-    const audible = hasSoloedAudio ? track.solo : !track.muted;
-    if (!audible) continue;
+    if (clip.content.kind === "audio") {
+      // Audio tracks honour solo/mute among themselves.
+      if (hasSoloedAudio ? !track.solo : track.muted) continue;
+    } else {
+      // A video clip lends its embedded audio only when the media actually has
+      // an audio stream, its track is not muted, and no audio track is soloed
+      // (a solo means "isolate that audio").
+      if (hasSoloedAudio || track.muted) continue;
+      if (!entities.media[audio.mediaId]?.metadata.hasAudio) continue;
+    }
 
     const clipStart = clip.startFrame;
     const clipEnd = clip.startFrame + clip.durationFrames;
@@ -76,18 +123,18 @@ export function resolveAudioTimeline(
     // Frames of the clip skipped because the export starts mid-clip; the source
     // must advance by that much (scaled by speed, as it consumes source faster).
     const headFrames = from - clipStart;
-    const sourceInSeconds = (clip.content.sourceInFrame + headFrames * clip.content.speed) / fps;
+    const sourceInSeconds = (audio.sourceInFrame + headFrames * audio.speed) / fps;
 
     resolved.push({
       clipId: clip.id,
-      mediaId: clip.content.mediaId,
+      mediaId: audio.mediaId,
       startSeconds: (from - startFrame) / fps,
       sourceInSeconds,
       durationSeconds: (to - from) / fps,
-      speed: clip.content.speed,
-      gain: evaluate(clip.content.volume, from) * track.volume,
-      fadeInSeconds: clip.content.fadeInFrames / fps,
-      fadeOutSeconds: clip.content.fadeOutFrames / fps,
+      speed: audio.speed,
+      gain: evaluate(audio.volume, from) * track.volume,
+      fadeInSeconds: audio.fadeInFrames / fps,
+      fadeOutSeconds: audio.fadeOutFrames / fps,
     });
   }
 

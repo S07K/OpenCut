@@ -87,10 +87,26 @@ function detectAudioTrack(video: HTMLVideoElement): boolean {
     mozHasAudio?: boolean;
     webkitAudioDecodedByteCount?: number;
     audioTracks?: { length: number };
+    captureStream?: () => MediaStream;
+    mozCaptureStream?: () => MediaStream;
   };
 
   if (typeof candidate.mozHasAudio === "boolean") return candidate.mozHasAudio;
   if (candidate.audioTracks) return candidate.audioTracks.length > 0;
+
+  // captureStream reflects the media's real tracks without playback — the only
+  // reliable signal in Chromium, where `webkitAudioDecodedByteCount` stays 0
+  // until audio has actually been decoded during playback (so probing a freshly
+  // loaded file would always report "no audio" and silence every imported clip).
+  const capture = candidate.captureStream ?? candidate.mozCaptureStream;
+  if (capture) {
+    try {
+      return capture.call(candidate).getAudioTracks().length > 0;
+    } catch {
+      // Fall through to the byte-count heuristic below.
+    }
+  }
+
   if (typeof candidate.webkitAudioDecodedByteCount === "number") {
     return candidate.webkitAudioDecodedByteCount > 0;
   }

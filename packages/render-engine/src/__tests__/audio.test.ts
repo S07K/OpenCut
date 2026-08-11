@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { AudioContent, Clip, ProjectDocument, Track } from "@opencut/types";
+import type {
+  AudioContent,
+  Clip,
+  MediaAsset,
+  ProjectDocument,
+  Track,
+  VideoContent,
+} from "@opencut/types";
 import { staticValue } from "@opencut/types";
 import { createClip, createProject, createTrack } from "@opencut/utils";
 import { resolveAudioTimeline } from "../audio";
@@ -18,7 +25,31 @@ function audioContent(over: Partial<AudioContent> = {}): AudioContent {
   };
 }
 
-function projectWith(tracks: Track[], clips: Clip[]): ProjectDocument {
+function videoContent(over: Partial<VideoContent> = {}): VideoContent {
+  return {
+    kind: "video",
+    mediaId: "v1",
+    sourceInFrame: 0,
+    speed: 1,
+    volume: staticValue(1),
+    muted: false,
+    ...over,
+  };
+}
+
+/** A minimal MediaAsset carrying only the audio-relevant metadata the resolver reads. */
+function media(id: string, hasAudio: boolean): MediaAsset {
+  return {
+    id,
+    metadata: { hasAudio },
+  } as unknown as MediaAsset;
+}
+
+function projectWith(
+  tracks: Track[],
+  clips: Clip[],
+  mediaAssets: MediaAsset[] = [],
+): ProjectDocument {
   const base = createProject(); // 30 fps default
   return {
     ...base,
@@ -26,6 +57,7 @@ function projectWith(tracks: Track[], clips: Clip[]): ProjectDocument {
       ...base.entities,
       tracks: Object.fromEntries(tracks.map((t) => [t.id, t])),
       clips: Object.fromEntries(clips.map((c) => [c.id, c])),
+      media: Object.fromEntries(mediaAssets.map((m) => [m.id, m])),
     },
     trackOrder: tracks.map((t) => t.id),
   };
@@ -33,6 +65,11 @@ function projectWith(tracks: Track[], clips: Clip[]): ProjectDocument {
 
 const audioTrack = (over: Partial<Track> = {}): Track => ({
   ...createTrack({ id: "at", kind: "audio", index: 0 }),
+  ...over,
+});
+
+const videoTrack = (over: Partial<Track> = {}): Track => ({
+  ...createTrack({ id: "vt", kind: "video", index: 0 }),
   ...over,
 });
 
@@ -158,5 +195,122 @@ describe("resolveAudioTimeline", () => {
     const resolved = resolveAudioTimeline(projectWith([track], [clip]), 0, 300)[0]!;
     expect(resolved.fadeInSeconds).toBe(0.5);
     expect(resolved.fadeOutSeconds).toBe(1);
+  });
+});
+
+describe("resolveAudioTimeline — video clips", () => {
+  it("includes a video clip's embedded audio when the media has an audio stream", () => {
+    const track = videoTrack();
+    const clip = createClip({
+      id: "v",
+      trackId: track.id,
+      startFrame: 30,
+      durationFrames: 60,
+      content: videoContent({ mediaId: "v1", volume: staticValue(0.8) }),
+    });
+
+    const [resolved] = resolveAudioTimeline(
+      projectWith([track], [clip], [media("v1", true)]),
+      0,
+      300,
+    );
+    expect(resolved).toMatchObject({
+      mediaId: "v1",
+      startSeconds: 1,
+      durationSeconds: 2,
+      gain: 0.8,
+    });
+  });
+
+  it("excludes a silent video (media without an audio stream)", () => {
+    const track = videoTrack();
+    const clip = createClip({
+      id: "v",
+      trackId: track.id,
+      startFrame: 0,
+      durationFrames: 30,
+      content: videoContent({ mediaId: "v1" }),
+    });
+    expect(
+      resolveAudioTimeline(projectWith([track], [clip], [media("v1", false)]), 0, 300),
+    ).toHaveLength(0);
+  });
+
+  it("excludes a video clip whose own audio is muted, or whose track is muted", () => {
+    const track = videoTrack();
+    const mutedClip = createClip({
+      id: "v1c",
+      trackId: track.id,
+      startFrame: 0,
+      durationFrames: 30,
+      content: videoContent({ mediaId: "v1", muted: true }),
+    });
+    expect(
+      resolveAudioTimeline(projectWith([track], [mutedClip], [media("v1", true)]), 0, 300),
+    ).toHaveLength(0);
+
+    const mutedTrack = videoTrack({ muted: true });
+    const clip = createClip({
+      id: "v2c",
+      trackId: mutedTrack.id,
+      startFrame: 0,
+      durationFrames: 30,
+      content: videoContent({ mediaId: "v1" }),
+    });
+    expect(
+      resolveAudioTimeline(projectWith([mutedTrack], [clip], [media("v1", true)]), 0, 300),
+    ).toHaveLength(0);
+  });
+
+  it("silences video-clip audio when an audio track is soloed", () => {
+    const vTrack = videoTrack({ id: "vt", index: 0 });
+    const aTrack = audioTrack({ id: "at", index: 1, solo: true });
+    const vClip = createClip({
+      id: "v",
+      trackId: vTrack.id,
+      startFrame: 0,
+      durationFrames: 30,
+      content: videoContent({ mediaId: "v1" }),
+    });
+    const aClip = createClip({
+      id: "a",
+      trackId: aTrack.id,
+      startFrame: 0,
+      durationFrames: 30,
+      content: audioContent(),
+    });
+
+    const resolved = resolveAudioTimeline(
+      projectWith([vTrack, aTrack], [vClip, aClip], [media("v1", true)]),
+      0,
+      300,
+    );
+    expect(resolved.map((r) => r.clipId)).toEqual(["a"]);
+  });
+
+  it("mixes audio-track and video-track audio together when both are audible", () => {
+    const vTrack = videoTrack({ id: "vt", index: 0 });
+    const aTrack = audioTrack({ id: "at", index: 1 });
+    const vClip = createClip({
+      id: "v",
+      trackId: vTrack.id,
+      startFrame: 0,
+      durationFrames: 30,
+      content: videoContent({ mediaId: "v1" }),
+    });
+    const aClip = createClip({
+      id: "a",
+      trackId: aTrack.id,
+      startFrame: 0,
+      durationFrames: 30,
+      content: audioContent(),
+    });
+
+    const resolved = resolveAudioTimeline(
+      projectWith([vTrack, aTrack], [vClip, aClip], [media("v1", true)]),
+      0,
+      300,
+    );
+    expect(resolved.map((r) => r.clipId).sort()).toEqual(["a", "v"]);
   });
 });

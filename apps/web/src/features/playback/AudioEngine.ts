@@ -2,7 +2,7 @@
 
 import type { Id, ProjectDocument } from "@opencut/types";
 import type { MediaBlobStore } from "@opencut/media-engine";
-import { secondsUntilClip, sourceOffsetSeconds } from "@opencut/playback-engine";
+import { resolveAudioTimeline, type ResolvedAudioClip } from "@opencut/render-engine";
 
 /**
  * Web Audio playback and the master clock.
@@ -109,60 +109,38 @@ export class AudioEngine {
    * Called once when playback starts, not per frame. Web Audio scheduling is
    * fire-and-forget by design: sources placed on the clock now will sound at
    * exactly the right moment even if the main thread stalls afterwards.
+   *
+   * Clip selection, placement, gain, and fades all come from the shared
+   * `resolveAudioTimeline` — the same resolver the exporter mixes from — so
+   * preview and export agree on what is audible (including a video clip's own
+   * audio). This engine only maps those placements onto the clock: the resolver
+   * works in output seconds, and `rate` compresses that into real time (2× play
+   * means a clip one output-second away starts in half a second).
    */
   scheduleFrom(project: ProjectDocument, fromFrame: number, rate: number): void {
     const context = this.ensureContext();
-    const frameRate = project.settings.frameRate;
     const startedAt = context.currentTime;
 
-    const hasSolo = Object.values(project.entities.tracks).some(
-      (track) => track.kind === "audio" && track.solo,
-    );
+    for (const clip of resolveAudioTimeline(project, fromFrame, project.durationFrames)) {
+      const buffer = this.buffers.get(clip.mediaId);
+      if (!buffer || clip.durationSeconds <= 0) continue;
 
-    for (const clip of Object.values(project.entities.clips)) {
-      if (clip.content.kind !== "audio") continue;
-      if (clip.hidden || clip.content.muted) continue;
-
-      const track = project.entities.tracks[clip.trackId];
-      if (!track) continue;
-      if (hasSolo ? !track.solo : track.muted) continue;
-
-      const buffer = this.buffers.get(clip.content.mediaId);
-      if (!buffer) continue;
-
-      const offset = sourceOffsetSeconds(
-        clip.startFrame,
-        clip.durationFrames,
-        clip.content.sourceInFrame,
-        clip.content.speed,
-        fromFrame,
-        frameRate,
-      );
-      if (offset === null) continue;
-
-      const delay = secondsUntilClip(clip.startFrame, fromFrame, frameRate, rate);
-
-      // Remaining clip length, so a trimmed clip stops at its out point rather
-      // than playing the rest of the source file.
-      const framesRemaining = clip.durationFrames - Math.max(0, fromFrame - clip.startFrame);
-      const durationSeconds = (framesRemaining / frameRate) * clip.content.speed;
-      if (durationSeconds <= 0) continue;
+      const when = startedAt + clip.startSeconds / rate;
+      const realDuration = clip.durationSeconds / rate;
 
       const source = context.createBufferSource();
       source.buffer = buffer;
-      source.playbackRate.value = clip.content.speed * rate;
+      source.playbackRate.value = clip.speed * rate;
 
       const gain = context.createGain();
-      // Clip volume is not animated here yet; the static value is read at
-      // schedule time. Animated volume needs param automation, which lands with
-      // the audio effects work.
-      const clipVolume = clip.content.volume.type === "static" ? clip.content.volume.value : 1;
-      gain.gain.value = clipVolume * track.volume;
+      applyGainEnvelope(gain, clip, when, realDuration, rate);
 
       source.connect(gain).connect(context.destination);
-      source.start(startedAt + delay, offset, durationSeconds);
+      // start(when, offset, duration): offset/duration are in source seconds, so
+      // the consumed span scales with speed (playbackRate already folds in rate).
+      source.start(when, clip.sourceInSeconds, clip.durationSeconds * clip.speed);
 
-      this.scheduled.push({ clipId: clip.id, source, gain });
+      this.scheduled.push({ clipId: clip.clipId, source, gain });
     }
   }
 
@@ -185,5 +163,35 @@ export class AudioEngine {
     this.buffers.clear();
     void this.context?.close();
     this.context = null;
+  }
+}
+
+/**
+ * Applies a clip's level and fades to its gain node, on the real (rate-scaled)
+ * clock. Fades ramp from/to zero; a clip with no fade holds a flat level. This
+ * mirrors the export mixer's envelope so preview and export sound the same.
+ */
+function applyGainEnvelope(
+  gain: GainNode,
+  clip: ResolvedAudioClip,
+  when: number,
+  realDuration: number,
+  rate: number,
+): void {
+  const level = clip.gain;
+  const fadeIn = Math.min(clip.fadeInSeconds, clip.durationSeconds) / rate;
+  const fadeOut = clip.fadeOutSeconds / rate;
+
+  if (fadeIn > 0) {
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(level, when + fadeIn);
+  } else {
+    gain.gain.setValueAtTime(level, when);
+  }
+
+  if (fadeOut > 0) {
+    const fadeStart = when + Math.max(0, realDuration - fadeOut);
+    gain.gain.setValueAtTime(level, fadeStart);
+    gain.gain.linearRampToValueAtTime(0, when + realDuration);
   }
 }
