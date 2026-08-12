@@ -34,6 +34,7 @@ export interface TimelineTheme {
   selection: string;
   playhead: string;
   snapGuide: string;
+  rangeBracket: string;
   clipColors: Record<string, string>;
 }
 
@@ -54,6 +55,7 @@ export function readTheme(element: HTMLElement): TimelineTheme {
     selection: token("--color-accent", "#6b7cff"),
     playhead: token("--color-accent", "#6b7cff"),
     snapGuide: token("--color-warning", "#e0a44a"),
+    rangeBracket: token("--color-warning", "#e0a44a"),
     clipColors: {
       video: token("--color-clip-video", "#5b6ee0"),
       audio: token("--color-clip-audio", "#3fae7a"),
@@ -76,6 +78,9 @@ export interface RenderTimelineArgs {
   clipRects: readonly ClipRect[];
   markers: readonly Marker[];
   playhead: Frame;
+  /** Export range boundaries; null when unset (defaults to start/end). */
+  inPoint: Frame | null;
+  outPoint: Frame | null;
   selectedClipIds: readonly Id[];
   /** Frame of the active snap guide during a drag, if any. */
   snapGuideFrame: Frame | null;
@@ -99,10 +104,63 @@ export function renderTimeline(args: RenderTimelineArgs): void {
   drawGridLines(args);
   drawClips(args);
   drawKeyframes(args);
+  drawInOutRange(args);
   drawRuler(args);
+  drawInOutBrackets(args);
   drawMarkers(args);
   drawSnapGuide(args);
   drawPlayhead(args);
+}
+
+/**
+ * Dims the track area *outside* the export in/out points, so the region that
+ * will actually be exported stays at full brightness. Drawn over the clips but
+ * under the ruler, so the ruler chrome stays crisp; the bracket glyphs on the
+ * ruler are drawn separately, after it.
+ */
+function drawInOutRange({ ctx, inPoint, outPoint, viewport }: RenderTimelineArgs): void {
+  if (inPoint === null && outPoint === null) return;
+
+  const top = RULER_HEIGHT;
+  const height = viewport.height - RULER_HEIGHT;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+
+  if (inPoint !== null) {
+    const x = Math.min(viewport.width, Math.max(0, frameToX(inPoint, viewport)));
+    if (x > 0) ctx.fillRect(0, top, x, height);
+  }
+  if (outPoint !== null) {
+    const x = Math.min(viewport.width, Math.max(0, frameToX(outPoint, viewport)));
+    if (x < viewport.width) ctx.fillRect(x, top, viewport.width - x, height);
+  }
+}
+
+/** Draws the in/out boundary lines and ruler bracket glyphs, on top of the ruler. */
+function drawInOutBrackets({ ctx, inPoint, outPoint, viewport, theme }: RenderTimelineArgs): void {
+  const bracket = (frame: Frame, side: "in" | "out") => {
+    const x = Math.round(frameToX(frame, viewport)) + 0.5;
+    if (x < -8 || x > viewport.width + 8) return;
+
+    ctx.strokeStyle = theme.rangeBracket;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, viewport.height);
+    ctx.stroke();
+
+    // A small filled tab in the ruler, pointing into the kept region.
+    const dir = side === "in" ? 1 : -1;
+    ctx.fillStyle = theme.rangeBracket;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + dir * 7, 0);
+    ctx.lineTo(x, 9);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  if (inPoint !== null) bracket(inPoint, "in");
+  if (outPoint !== null) bracket(outPoint, "out");
 }
 
 /**

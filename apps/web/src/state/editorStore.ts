@@ -63,9 +63,18 @@ export interface EditorState {
   selectedClipIds: Id[];
   isPlaying: boolean;
   snapEnabled: boolean;
+  /** Export in-point (inclusive), or null for "from the start". */
+  inPoint: Frame | null;
+  /** Export out-point (exclusive), or null for "to the end". */
+  outPoint: Frame | null;
 
   // --- Actions ---
   setPlayhead: (frame: Frame) => void;
+  /** Sets or clears the export in-point. Pass null to clear. */
+  setInPoint: (frame: Frame | null) => void;
+  /** Sets or clears the export out-point. Pass null to clear. */
+  setOutPoint: (frame: Frame | null) => void;
+  clearInOut: () => void;
   setZoom: (pixelsPerFrame: number) => void;
   zoomBy: (factor: number) => void;
   setScrollFrame: (frame: number) => void;
@@ -163,8 +172,35 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
   selectedClipIds: [],
   isPlaying: false,
   snapEnabled: true,
+  inPoint: null,
+  outPoint: null,
 
   setPlayhead: (frame) => set({ playhead: Math.max(0, Math.round(frame)) }),
+
+  // In/out points keep `inPoint < outPoint` whenever both are set, so the export
+  // range they define is always valid; setting one past the other clears the
+  // other rather than producing an inverted range.
+  setInPoint: (frame) =>
+    set((state) => {
+      if (frame === null) return { inPoint: null };
+      const inPoint = Math.max(0, Math.round(frame));
+      return {
+        inPoint,
+        outPoint: state.outPoint !== null && state.outPoint <= inPoint ? null : state.outPoint,
+      };
+    }),
+
+  setOutPoint: (frame) =>
+    set((state) => {
+      if (frame === null) return { outPoint: null };
+      const outPoint = Math.max(0, Math.round(frame));
+      return {
+        outPoint,
+        inPoint: state.inPoint !== null && state.inPoint >= outPoint ? null : state.inPoint,
+      };
+    }),
+
+  clearInOut: () => set({ inPoint: null, outPoint: null }),
 
   setZoom: (pixelsPerFrame) =>
     set({
@@ -342,6 +378,8 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       scrollFrame: 0,
       selectedClipIds: [],
       isPlaying: false,
+      inPoint: null,
+      outPoint: null,
     }),
 
   renameProject: (name) =>

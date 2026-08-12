@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { Button, IconButton, cn } from "@opencut/ui";
 import type { ExportFormat, ExportSettings, Size } from "@opencut/types";
 import { describeExport, planExport } from "@opencut/export-engine";
+import { formatTimecode } from "@opencut/timeline-engine";
 import { useEditorStore } from "@/state/editorStore";
 import { useExport } from "./useExport";
 
@@ -28,6 +29,8 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
   const projectFps = useEditorStore((s) => s.project.settings.frameRate);
   const stored = useEditorStore((s) => s.project.exportSettings);
   const durationFrames = useEditorStore((s) => s.project.durationFrames);
+  const inPoint = useEditorStore((s) => s.inPoint);
+  const outPoint = useEditorStore((s) => s.outPoint);
 
   const { isExporting, progress, error, done, start, cancel } = useExport();
 
@@ -35,6 +38,14 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
   const [height, setHeight] = useState<number>(projectRes.height);
   const [frameRate, setFrameRate] = useState<number>(projectFps);
   const [quality, setQuality] = useState<Quality>("medium");
+
+  // An in/out selection is available when either point is set; the untouched end
+  // defaults to the timeline's start or end.
+  const hasSelection = inPoint !== null || outPoint !== null;
+  const selection = { start: inPoint ?? 0, end: outPoint ?? durationFrames };
+  // Default to the selection when one exists — someone who set in/out points
+  // almost certainly wants to export that, not the whole timeline.
+  const [useSelection, setUseSelection] = useState(hasSelection);
 
   // Close on Escape unless a render is in flight (cancel first, deliberately).
   useEffect(() => {
@@ -59,22 +70,35 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
       audioBitrate: 192_000,
       videoCodec: format === "webm" ? "vp9" : "h264",
       audioCodec: format === "webm" ? "opus" : "aac",
-      range: null,
+      range: useSelection && hasSelection ? selection : null,
     }),
-    [format, resolution, frameRate, quality],
+    [
+      format,
+      resolution,
+      frameRate,
+      quality,
+      useSelection,
+      hasSelection,
+      selection.start,
+      selection.end,
+    ],
   );
 
-  // Validate the chosen settings so the summary reflects real, encodable output.
-  const summary = useMemo(() => {
+  // Validate the chosen settings so the summary reflects real, encodable output
+  // and a bad range (or empty timeline) disables the button rather than failing
+  // mid-export.
+  const { summary, valid } = useMemo(() => {
     try {
-      return describeExport(planExport({ durationFrames } as never, settings));
+      return {
+        summary: describeExport(planExport({ durationFrames } as never, settings)),
+        valid: true,
+      };
     } catch (err) {
-      return err instanceof Error ? err.message : "Invalid settings";
+      return { summary: err instanceof Error ? err.message : "Invalid settings", valid: false };
     }
   }, [durationFrames, settings]);
 
   const percent = Math.round((progress?.ratio ?? 0) * 100);
-  const empty = durationFrames <= 0;
 
   return createPortal(
     <div
@@ -146,6 +170,21 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
               </Select>
             </Field>
 
+            {hasSelection && (
+              <Field label="Range">
+                <Select
+                  value={useSelection ? "selection" : "full"}
+                  onChange={(v) => setUseSelection(v === "selection")}
+                >
+                  <option value="selection">
+                    In–Out ({formatTimecode(selection.start, projectFps)}–
+                    {formatTimecode(selection.end, projectFps)})
+                  </option>
+                  <option value="full">Full timeline</option>
+                </Select>
+              </Field>
+            )}
+
             <p className="text-2xs text-text-tertiary tabular mt-1">{summary}</p>
 
             {error && <p className="text-danger text-2xs">Export failed: {error}</p>}
@@ -155,10 +194,10 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
               size="sm"
               variant="primary"
               className="mt-1 w-full justify-center"
-              disabled={empty}
+              disabled={!valid}
               onClick={() => start(settings)}
             >
-              {empty ? "Nothing to export" : "Export"}
+              {valid ? "Export" : "Nothing to export"}
             </Button>
           </div>
         )}

@@ -1,6 +1,15 @@
 "use client";
 
-import { Magnet, Scissors, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  Braces,
+  Magnet,
+  Scissors,
+  SquareChevronLeft,
+  SquareChevronRight,
+  Trash2,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { IconButton, Panel } from "@opencut/ui";
 import { formatTimecode } from "@opencut/timeline-engine";
 import { TimelineCanvas } from "./TimelineCanvas";
@@ -14,10 +23,18 @@ export function TimelinePanel() {
   const snapEnabled = useEditorStore((state) => state.snapEnabled);
   const selectionCount = useEditorStore((state) => state.selectedClipIds.length);
 
+  const inPoint = useEditorStore((state) => state.inPoint);
+  const outPoint = useEditorStore((state) => state.outPoint);
+
   const zoomBy = useEditorStore((state) => state.zoomBy);
   const toggleSnap = useEditorStore((state) => state.toggleSnap);
   const splitAtPlayhead = useEditorStore((state) => state.splitAtPlayhead);
   const deleteSelected = useEditorStore((state) => state.deleteSelected);
+  const setInPoint = useEditorStore((state) => state.setInPoint);
+  const setOutPoint = useEditorStore((state) => state.setOutPoint);
+  const clearInOut = useEditorStore((state) => state.clearInOut);
+
+  const hasRange = inPoint !== null || outPoint !== null;
 
   return (
     <Panel bare className="border-border-subtle border-t">
@@ -49,6 +66,30 @@ export function TimelinePanel() {
           >
             <Magnet size={14} />
           </IconButton>
+
+          <div className="bg-border-subtle mx-2 h-4 w-px" />
+
+          <IconButton
+            size="sm"
+            label="Set export in-point at playhead (I)"
+            active={inPoint !== null}
+            onClick={() => setInPoint(playhead)}
+          >
+            <SquareChevronRight size={14} />
+          </IconButton>
+          <IconButton
+            size="sm"
+            label="Set export out-point at playhead (O)"
+            active={outPoint !== null}
+            onClick={() => setOutPoint(playhead)}
+          >
+            <SquareChevronLeft size={14} />
+          </IconButton>
+          {hasRange && (
+            <IconButton size="sm" label="Clear export range" onClick={clearInOut}>
+              <Braces size={14} />
+            </IconButton>
+          )}
 
           <div className="flex-1" />
 

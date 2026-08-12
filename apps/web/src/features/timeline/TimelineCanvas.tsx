@@ -70,6 +70,8 @@ export function TimelineCanvas() {
   const scrollFrame = useEditorStore((state) => state.scrollFrame);
   const selectedClipIds = useEditorStore((state) => state.selectedClipIds);
   const snapEnabled = useEditorStore((state) => state.snapEnabled);
+  const inPoint = useEditorStore((state) => state.inPoint);
+  const outPoint = useEditorStore((state) => state.outPoint);
 
   const setPlayhead = useEditorStore((state) => state.setPlayhead);
   const selectClips = useEditorStore((state) => state.selectClips);
@@ -141,6 +143,8 @@ export function TimelineCanvas() {
       clipRects: rects,
       markers,
       playhead,
+      inPoint,
+      outPoint,
       selectedClipIds,
       snapGuideFrame,
       keyframes,
@@ -155,6 +159,8 @@ export function TimelineCanvas() {
     clips,
     markers,
     playhead,
+    inPoint,
+    outPoint,
     selectedClipIds,
     snapGuideFrame,
     fps,

@@ -91,6 +91,20 @@ export function useKeyboardShortcuts(onSave?: () => void): void {
           state.toggleSnap();
           break;
 
+        case "i":
+        case "I":
+          if (event.metaKey || event.ctrlKey) return;
+          event.preventDefault();
+          state.setInPoint(state.playhead);
+          break;
+
+        case "o":
+        case "O":
+          if (event.metaKey || event.ctrlKey) return;
+          event.preventDefault();
+          state.setOutPoint(state.playhead);
+          break;
+
         case "Delete":
         case "Backspace":
           event.preventDefault();
