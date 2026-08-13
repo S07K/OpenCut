@@ -1,4 +1,4 @@
-import type { Clip, Frame, Id, Track } from "@opencut/types";
+import type { CaptionBlock, CaptionTrackData, Clip, Frame, Id, Track } from "@opencut/types";
 
 /**
  * Timeline coordinate math.
@@ -13,6 +13,8 @@ export const RULER_HEIGHT = 28;
 export const TRACK_GAP = 2;
 /** Width of the trim handle at each end of a clip, in pixels. */
 export const TRIM_HANDLE_WIDTH = 6;
+/** Height of a caption lane, sitting below the clip tracks. */
+export const CAPTION_LANE_HEIGHT = 34;
 
 export interface TimelineViewport {
   /** Leftmost visible frame. */
@@ -52,6 +54,74 @@ export function layoutTracks(tracks: readonly Track[]): TrackLayout[] {
 
 export function totalTracksHeight(tracks: readonly Track[]): number {
   return tracks.reduce((sum, track) => sum + track.height + TRACK_GAP, RULER_HEIGHT);
+}
+
+/** A caption track laid out as a lane below the clip tracks. */
+export interface CaptionLaneLayout {
+  track: CaptionTrackData;
+  top: number;
+  height: number;
+}
+
+/** Lays out caption tracks as lanes stacked below the clip tracks (from `startY`). */
+export function layoutCaptionTracks(
+  captionTracks: readonly CaptionTrackData[],
+  startY: number,
+): CaptionLaneLayout[] {
+  const lanes: CaptionLaneLayout[] = [];
+  let cursor = startY;
+
+  for (const track of captionTracks) {
+    lanes.push({ track, top: cursor, height: CAPTION_LANE_HEIGHT });
+    cursor += CAPTION_LANE_HEIGHT + TRACK_GAP;
+  }
+
+  return lanes;
+}
+
+/** A caption block's on-screen rectangle within its lane. */
+export interface CaptionBlockRect {
+  trackId: Id;
+  block: CaptionBlock;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** Every visible caption block across all lanes, in draw order. */
+export function visibleCaptionBlocks(
+  lanes: readonly CaptionLaneLayout[],
+  viewport: TimelineViewport,
+): CaptionBlockRect[] {
+  const rects: CaptionBlockRect[] = [];
+
+  for (const lane of lanes) {
+    for (const block of lane.track.blocks) {
+      const x = frameToX(block.startFrame, viewport);
+      const width = (block.endFrame - block.startFrame) * viewport.pixelsPerFrame;
+      if (x + width < 0 || x > viewport.width) continue; // cull off-screen
+      rects.push({ trackId: lane.track.id, block, x, y: lane.top, width, height: lane.height });
+    }
+  }
+
+  return rects;
+}
+
+/** The caption block under a point, topmost first. */
+export function hitTestCaptionBlock(
+  x: number,
+  y: number,
+  rects: readonly CaptionBlockRect[],
+): CaptionBlockRect | null {
+  for (let index = rects.length - 1; index >= 0; index -= 1) {
+    const rect = rects[index];
+    if (!rect) continue;
+    if (x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height) {
+      return rect;
+    }
+  }
+  return null;
 }
 
 export interface ClipRect {

@@ -1,9 +1,19 @@
 "use client";
 
-import { Eye, EyeOff, Lock, LockOpen, Plus, Volume2, VolumeX } from "lucide-react";
+import {
+  Captions,
+  Eye,
+  EyeOff,
+  Lock,
+  LockOpen,
+  Plus,
+  Trash2,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { IconButton, cn } from "@opencut/ui";
 import { useShallow } from "zustand/react/shallow";
-import { RULER_HEIGHT, TRACK_GAP } from "./geometry";
+import { CAPTION_LANE_HEIGHT, RULER_HEIGHT, TRACK_GAP } from "./geometry";
 import { selectOrderedTracks, useEditorStore } from "@/state/editorStore";
 
 /**
@@ -16,8 +26,12 @@ import { selectOrderedTracks, useEditorStore } from "@/state/editorStore";
  */
 export function TrackHeaders() {
   const tracks = useEditorStore(useShallow(selectOrderedTracks));
+  const captionTracks = useEditorStore(
+    useShallow((state) => Object.values(state.project.entities.captionTracks)),
+  );
   const setTrackFlag = useEditorStore((state) => state.setTrackFlag);
   const addTrack = useEditorStore((state) => state.addTrack);
+  const removeCaptionTrack = useEditorStore((state) => state.removeCaptionTrack);
 
   return (
     <div className="border-border-subtle bg-surface-panel flex h-full w-(--size-track-header-width) shrink-0 flex-col border-r">
@@ -68,6 +82,27 @@ export function TrackHeaders() {
               {track.locked ? <Lock size={13} /> : <LockOpen size={13} />}
             </IconButton>
           </div>
+        </div>
+      ))}
+
+      {/* Caption-track lanes, aligned with the canvas caption lanes below the
+          clip tracks. Blocks are dragged on the canvas; the header just labels
+          the lane and offers removal. */}
+      {captionTracks.map((track) => (
+        <div
+          key={track.id}
+          className="border-border-subtle/50 flex shrink-0 items-center gap-1 border-b px-2"
+          style={{ height: CAPTION_LANE_HEIGHT, marginBottom: TRACK_GAP }}
+        >
+          <Captions size={13} className="text-text-tertiary shrink-0" />
+          <p className="text-text-secondary min-w-0 flex-1 truncate text-xs">Captions</p>
+          <IconButton
+            size="sm"
+            label="Remove captions"
+            onClick={() => removeCaptionTrack(track.id)}
+          >
+            <Trash2 size={13} />
+          </IconButton>
         </div>
       ))}
 

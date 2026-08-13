@@ -5,13 +5,17 @@ import { useShallow } from "zustand/react/shallow";
 import type { Frame, Id } from "@opencut/types";
 import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag } from "@opencut/timeline-engine";
 import {
+  hitTestCaptionBlock,
   hitTestClip,
+  layoutCaptionTracks,
   layoutTracks,
   RULER_HEIGHT,
   totalTracksHeight,
   trackAtY,
+  visibleCaptionBlocks,
   visibleClips,
   xToFrame,
+  type CaptionBlockRect,
   type ClipRect,
   type TimelineViewport,
 } from "./geometry";
@@ -49,6 +53,13 @@ type DragMode =
       clipId: Id;
       /** The keyframe row's current frame; updated as the drag progresses. */
       currentFrame: Frame;
+    }
+  | {
+      kind: "move-caption";
+      trackId: Id;
+      blockId: Id;
+      /** Frame offset between the pointer and the block's start, held constant. */
+      grabOffsetFrames: number;
     };
 
 export function TimelineCanvas() {
@@ -56,6 +67,7 @@ export function TimelineCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<TimelineTheme | null>(null);
   const clipRectsRef = useRef<ClipRect[]>([]);
+  const captionRectsRef = useRef<CaptionBlockRect[]>([]);
   const dragRef = useRef<DragMode>({ kind: "none" });
 
   const [snapGuideFrame, setSnapGuideFrame] = useState<Frame | null>(null);
@@ -78,7 +90,12 @@ export function TimelineCanvas() {
   const clearSelection = useEditorStore((state) => state.clearSelection);
   const moveClipTo = useEditorStore((state) => state.moveClipTo);
   const updateClip = useEditorStore((state) => state.updateClip);
+  const moveCaptionBlock = useEditorStore((state) => state.moveCaptionBlock);
   const endGesture = useEditorStore((state) => state.endGesture);
+
+  const captionTracks = useEditorStore(
+    useShallow((state) => Object.values(state.project.entities.captionTracks)),
+  );
 
   // `useShallow` is load-bearing, not an optimization: these selectors build a
   // new array on every call, and zustand v5 compares snapshots by reference.
@@ -125,6 +142,10 @@ export function TimelineCanvas() {
     const rects = visibleClips(clips, layouts, viewport);
     clipRectsRef.current = rects;
 
+    const captionLanes = layoutCaptionTracks(captionTracks, totalTracksHeight(tracks));
+    const captionBlockRects = visibleCaptionBlocks(captionLanes, viewport);
+    captionRectsRef.current = captionBlockRects;
+
     // Keyframe diamonds are drawn only for a single selected animated clip;
     // showing them for every clip at once would bury the timeline in noise.
     let keyframes: { clipId: string; frames: readonly number[] } | null = null;
@@ -141,6 +162,8 @@ export function TimelineCanvas() {
       viewport,
       layouts,
       clipRects: rects,
+      captionLanes,
+      captionBlockRects,
       markers,
       playhead,
       inPoint,
@@ -157,6 +180,7 @@ export function TimelineCanvas() {
     pixelsPerFrame,
     tracks,
     clips,
+    captionTracks,
     markers,
     playhead,
     inPoint,
@@ -209,6 +233,20 @@ export function TimelineCanvas() {
       if (y <= RULER_HEIGHT) {
         dragRef.current = { kind: "seek" };
         setPlayhead(frame);
+        return;
+      }
+
+      // Caption blocks live in their own lanes below the clip tracks; grabbing
+      // one starts a horizontal move so it can be synced to the audio.
+      const captionHit = hitTestCaptionBlock(x, y, captionRectsRef.current);
+      if (captionHit) {
+        clearSelection();
+        dragRef.current = {
+          kind: "move-caption",
+          trackId: captionHit.trackId,
+          blockId: captionHit.block.id,
+          grabOffsetFrames: frame - captionHit.block.startFrame,
+        };
         return;
       }
 
@@ -300,6 +338,12 @@ export function TimelineCanvas() {
         return;
       }
 
+      if (drag.kind === "move-caption") {
+        const target = Math.max(0, frame - drag.grabOffsetFrames);
+        moveCaptionBlock(drag.trackId, drag.blockId, target);
+        return;
+      }
+
       const clip = project.entities.clips[drag.clipId];
       if (!clip) return;
 
@@ -347,6 +391,7 @@ export function TimelineCanvas() {
       tracks,
       moveClipTo,
       updateClip,
+      moveCaptionBlock,
     ],
   );
 
@@ -374,7 +419,11 @@ export function TimelineCanvas() {
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       // Closes the undo entry for this drag, so the whole gesture is one step
       // and the next drag starts a new one.
-      if (dragRef.current.kind === "move-clip" || dragRef.current.kind === "move-keyframe") {
+      if (
+        dragRef.current.kind === "move-clip" ||
+        dragRef.current.kind === "move-keyframe" ||
+        dragRef.current.kind === "move-caption"
+      ) {
         endGesture();
       }
 

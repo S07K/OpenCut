@@ -12,6 +12,7 @@ import type {
   Track,
 } from "@opencut/types";
 import { computeDuration, moveClip, rippleDelete, splitClip } from "@opencut/timeline-engine";
+import { shiftBlock } from "@opencut/caption-engine";
 import { createClipForAsset, trackKindForAsset } from "@opencut/media-engine";
 import { createId, createProject, createTrack } from "@opencut/utils";
 import {
@@ -115,6 +116,8 @@ export interface EditorState {
     label: string,
     mergeKey?: string,
   ) => void;
+  /** Moves a caption block so it starts at `startFrame`, shifting all its words. */
+  moveCaptionBlock: (trackId: Id, blockId: Id, startFrame: Frame) => void;
 
   /** Swaps in a whole document, on project load or restore. */
   replaceProject: (project: ProjectDocument) => void;
@@ -522,6 +525,41 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
         }),
         label,
         mergeKey,
+      );
+    }),
+
+  moveCaptionBlock: (trackId, blockId, startFrame) =>
+    set((state) => {
+      const track = state.project.entities.captionTracks[trackId];
+      if (!track) return state;
+      const block = track.blocks.find((candidate) => candidate.id === blockId);
+      if (!block) return state;
+
+      // Clamp so the earliest word never crosses zero, then shift the whole
+      // block (block frames + every word) by the delta.
+      const target = Math.max(0, Math.round(startFrame));
+      const delta = target - block.startFrame;
+      if (delta === 0) return state;
+
+      const blocks = track.blocks
+        .map((candidate) => (candidate.id === blockId ? shiftBlock(candidate, delta) : candidate))
+        .sort((a, b) => a.startFrame - b.startFrame);
+
+      return commit(
+        state,
+        withDerived({
+          ...state.project,
+          entities: {
+            ...state.project.entities,
+            captionTracks: {
+              ...state.project.entities.captionTracks,
+              [trackId]: { ...track, blocks },
+            },
+          },
+        }),
+        "Move caption",
+        // One undo step for the whole drag gesture.
+        `caption-move:${blockId}`,
       );
     }),
 

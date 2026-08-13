@@ -4,6 +4,8 @@ import {
   chooseTickInterval,
   frameToX,
   RULER_HEIGHT,
+  type CaptionBlockRect,
+  type CaptionLaneLayout,
   type ClipRect,
   type TimelineViewport,
   type TrackLayout,
@@ -35,6 +37,7 @@ export interface TimelineTheme {
   playhead: string;
   snapGuide: string;
   rangeBracket: string;
+  caption: string;
   clipColors: Record<string, string>;
 }
 
@@ -56,6 +59,7 @@ export function readTheme(element: HTMLElement): TimelineTheme {
     playhead: token("--color-accent", "#6b7cff"),
     snapGuide: token("--color-warning", "#e0a44a"),
     rangeBracket: token("--color-warning", "#e0a44a"),
+    caption: token("--color-clip-text", "#d9a441"),
     clipColors: {
       video: token("--color-clip-video", "#5b6ee0"),
       audio: token("--color-clip-audio", "#3fae7a"),
@@ -76,6 +80,10 @@ export interface RenderTimelineArgs {
   viewport: TimelineViewport;
   layouts: readonly TrackLayout[];
   clipRects: readonly ClipRect[];
+  /** Caption lanes stacked below the clip tracks. */
+  captionLanes: readonly CaptionLaneLayout[];
+  /** Caption block rectangles to draw (and hit-test against). */
+  captionBlockRects: readonly CaptionBlockRect[];
   markers: readonly Marker[];
   playhead: Frame;
   /** Export range boundaries; null when unset (defaults to start/end). */
@@ -103,6 +111,7 @@ export function renderTimeline(args: RenderTimelineArgs): void {
   drawTrackLanes(args);
   drawGridLines(args);
   drawClips(args);
+  drawCaptionLanes(args);
   drawKeyframes(args);
   drawInOutRange(args);
   drawRuler(args);
@@ -280,6 +289,61 @@ function drawClips(args: RenderTimelineArgs): void {
     const isSelected = selected.has(rect.clip.id);
     drawClip(ctx, rect, isSelected, theme);
   }
+}
+
+/**
+ * Draws caption lanes below the clip tracks: a lane background per caption
+ * track, then each block as a labelled segment. Blocks carry their timing here
+ * so they can be dragged to line up with the audio, just like clips.
+ */
+function drawCaptionLanes({
+  ctx,
+  captionLanes,
+  captionBlockRects,
+  viewport,
+  playhead,
+  theme,
+}: RenderTimelineArgs): void {
+  for (const lane of captionLanes) {
+    ctx.fillStyle = theme.trackBackgroundAlt;
+    ctx.fillRect(0, lane.top, viewport.width, lane.height);
+  }
+
+  for (const rect of captionBlockRects) {
+    const x = Math.round(rect.x);
+    const y = Math.round(rect.y) + 1;
+    const width = Math.max(2, Math.round(rect.width));
+    const height = rect.height - 2;
+    const radius = Math.min(4, width / 2);
+
+    // Highlight the block currently under the playhead — the one on screen.
+    const active = playhead >= rect.block.startFrame && playhead < rect.block.endFrame;
+
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, height, radius);
+    ctx.fillStyle = theme.caption;
+    ctx.globalAlpha = active ? 1 : 0.72;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    if (width > 24) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x + 5, y, width - 10, height);
+      ctx.clip();
+      ctx.fillStyle = "#1c1d22";
+      ctx.font = "600 10px Inter, system-ui, sans-serif";
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "left";
+      ctx.fillText(captionLabel(rect), x + 6, y + height / 2);
+      ctx.restore();
+    }
+  }
+}
+
+/** The visible text of a caption block, for its timeline segment label. */
+function captionLabel(rect: CaptionBlockRect): string {
+  return rect.block.words.map((word) => word.text).join(" ");
 }
 
 function drawClip(
