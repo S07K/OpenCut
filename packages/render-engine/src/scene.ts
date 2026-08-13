@@ -362,8 +362,10 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
         trackId,
         // Track order dominates so a clip can never draw above a clip on a
         // higher track; the clip's own start frame only breaks ties within a
-        // track, giving a stable order for overlapping clips.
-        zIndex: trackIndex * 1_000_000 + clip.startFrame,
+        // track, giving a stable order for overlapping clips. Earlier tracks in
+        // `trackOrder` sit higher in the timeline UI and draw in *front*, the
+        // standard NLE convention (top layer wins), so z decreases with index.
+        zIndex: (trackOrder.length - trackIndex) * 1_000_000 + clip.startFrame,
         transform: resolveTransform(clip, frame),
         appearance: resolveAppearance(clip, frame),
         content,

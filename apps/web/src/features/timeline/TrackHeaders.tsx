@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react";
+import { Eye, EyeOff, Lock, LockOpen, Plus, Volume2, VolumeX } from "lucide-react";
 import { IconButton, cn } from "@opencut/ui";
 import { useShallow } from "zustand/react/shallow";
 import { RULER_HEIGHT, TRACK_GAP } from "./geometry";
@@ -17,6 +17,7 @@ import { selectOrderedTracks, useEditorStore } from "@/state/editorStore";
 export function TrackHeaders() {
   const tracks = useEditorStore(useShallow(selectOrderedTracks));
   const setTrackFlag = useEditorStore((state) => state.setTrackFlag);
+  const addTrack = useEditorStore((state) => state.addTrack);
 
   return (
     <div className="border-border-subtle bg-surface-panel flex h-full w-(--size-track-header-width) shrink-0 flex-col border-r">
@@ -69,6 +70,29 @@ export function TrackHeaders() {
           </div>
         </div>
       ))}
+
+      {/* Add-track controls. A new video track lands on top (front); audio at the
+          bottom — enough to layer clips (backgrounds, overlays, picture-in-picture). */}
+      <div className="flex items-center gap-1 px-2 py-1.5">
+        <button
+          onClick={() => addTrack("video")}
+          className={cn(
+            "border-border-default bg-surface-raised text-text-secondary text-2xs flex flex-1 items-center justify-center gap-1 rounded-sm border py-1",
+            "duration-fast hover:border-accent hover:text-text-primary transition-colors",
+          )}
+        >
+          <Plus size={12} /> Video
+        </button>
+        <button
+          onClick={() => addTrack("audio")}
+          className={cn(
+            "border-border-default bg-surface-raised text-text-secondary text-2xs flex flex-1 items-center justify-center gap-1 rounded-sm border py-1",
+            "duration-fast hover:border-accent hover:text-text-primary transition-colors",
+          )}
+        >
+          <Plus size={12} /> Audio
+        </button>
+      </div>
     </div>
   );
 }

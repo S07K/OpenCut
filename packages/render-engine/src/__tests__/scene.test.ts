@@ -240,26 +240,29 @@ describe("resolveScene", () => {
     expect(resolveScene(project, 10).nodes).toHaveLength(0);
   });
 
-  it("orders nodes by track, so a lower track never draws on top", () => {
-    const bottom = createTrack({ kind: "video", index: 0 });
-    const top = createTrack({ kind: "overlay", index: 1 });
+  it("draws the first track in order on top (top layer wins)", () => {
+    // trackOrder is top-of-UI first; the first track is the foreground.
+    const front = createTrack({ kind: "video", index: 0 });
+    const back = createTrack({ kind: "overlay", index: 1 });
 
-    // The bottom-track clip starts later; track order must still win.
-    const bottomClip = createClip({
-      trackId: bottom.id,
+    // The front clip starts later; track order must still put it on top.
+    const frontClip = createClip({
+      trackId: front.id,
       startFrame: 5,
       durationFrames: 100,
       content: videoContent(),
     });
-    const topClip = createClip({
-      trackId: top.id,
+    const backClip = createClip({
+      trackId: back.id,
       startFrame: 0,
       durationFrames: 100,
       content: videoContent(),
     });
 
-    const scene = resolveScene(projectWith([bottom, top], [bottomClip, topClip]), 10);
-    expect(scene.nodes.map((n) => n.clipId)).toEqual([bottomClip.id, topClip.id]);
+    // Nodes come back in draw order (back to front), so the front-track clip
+    // is last — drawn on top.
+    const scene = resolveScene(projectWith([front, back], [frontClip, backClip]), 10);
+    expect(scene.nodes.map((n) => n.clipId)).toEqual([backClip.id, frontClip.id]);
   });
 
   it("omits clips on hidden tracks and hidden clips", () => {

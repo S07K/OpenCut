@@ -94,6 +94,8 @@ export interface EditorState {
   splitAtPlayhead: () => void;
   deleteSelected: () => void;
   setTrackFlag: (trackId: Id, flag: "locked" | "hidden" | "muted", value: boolean) => void;
+  /** Adds an empty track. Video tracks go on top (front); audio tracks at the bottom. */
+  addTrack: (kind: "video" | "audio") => void;
 
   addMediaAssets: (assets: MediaAsset[]) => void;
   /** Replaces an asset in place, for late-arriving thumbnails and waveforms. */
@@ -344,6 +346,35 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
           "Delete clip",
         ),
       };
+    }),
+
+  addTrack: (kind) =>
+    set((state) => {
+      const existingOfKind = Object.values(state.project.entities.tracks).filter(
+        (track) => track.kind === kind,
+      ).length;
+      const track = createTrack({ kind, index: existingOfKind });
+
+      // Video tracks prepend (top of the timeline = drawn in front); audio
+      // tracks append (bottom), keeping video grouped above audio like an NLE.
+      const trackOrder =
+        kind === "audio"
+          ? [...state.project.trackOrder, track.id]
+          : [track.id, ...state.project.trackOrder];
+
+      return commit(
+        state,
+        {
+          ...state.project,
+          entities: {
+            ...state.project.entities,
+            tracks: { ...state.project.entities.tracks, [track.id]: track },
+          },
+          trackOrder,
+          modifiedAt: Date.now(),
+        },
+        `Add ${kind} track`,
+      );
     }),
 
   setTrackFlag: (trackId, flag, value) =>
