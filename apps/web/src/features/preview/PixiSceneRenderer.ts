@@ -224,7 +224,10 @@ export class PixiSceneRenderer {
     const key = `${grade ? "g" : "-"}|${node.effects.map((e) => e.effectId).join(",")}`;
     if (this.filterKeys.get(node.clipId) !== key) {
       const filters = grade ? [grade, ...effects] : effects;
-      content.filters = filters;
+      // `null`, not an empty array: an empty filter list still triggers a filter
+      // render pass in Pixi, which renders the object black when it is also
+      // masked. `null` skips the pass entirely.
+      content.filters = filters.length > 0 ? filters : null;
       this.filterKeys.set(node.clipId, key);
     }
   }
