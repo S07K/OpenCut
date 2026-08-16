@@ -12,7 +12,7 @@ import type {
   Track,
 } from "@opencut/types";
 import { computeDuration, moveClip, rippleDelete, splitClip } from "@opencut/timeline-engine";
-import { shiftBlock } from "@opencut/caption-engine";
+import { retimeBlock, shiftBlock } from "@opencut/caption-engine";
 import { createClipForAsset, trackKindForAsset } from "@opencut/media-engine";
 import { createId, createProject, createTrack } from "@opencut/utils";
 import {
@@ -118,6 +118,8 @@ export interface EditorState {
   ) => void;
   /** Moves a caption block so it starts at `startFrame`, shifting all its words. */
   moveCaptionBlock: (trackId: Id, blockId: Id, startFrame: Frame) => void;
+  /** Trims a caption block's start or end to `frame`, re-timing its words to fit. */
+  trimCaptionBlock: (trackId: Id, blockId: Id, edge: "start" | "end", frame: Frame) => void;
 
   /** Swaps in a whole document, on project load or restore. */
   replaceProject: (project: ProjectDocument) => void;
@@ -560,6 +562,42 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
         "Move caption",
         // One undo step for the whole drag gesture.
         `caption-move:${blockId}`,
+      );
+    }),
+
+  trimCaptionBlock: (trackId, blockId, edge, frame) =>
+    set((state) => {
+      const track = state.project.entities.captionTracks[trackId];
+      if (!track) return state;
+      const block = track.blocks.find((candidate) => candidate.id === blockId);
+      if (!block) return state;
+
+      const target = Math.max(0, Math.round(frame));
+      // Trimming one edge holds the other fixed; retimeBlock clamps a minimum
+      // width so the caption never collapses.
+      const retimed =
+        edge === "start"
+          ? retimeBlock(block, target, block.endFrame)
+          : retimeBlock(block, block.startFrame, target);
+
+      const blocks = track.blocks
+        .map((candidate) => (candidate.id === blockId ? retimed : candidate))
+        .sort((a, b) => a.startFrame - b.startFrame);
+
+      return commit(
+        state,
+        withDerived({
+          ...state.project,
+          entities: {
+            ...state.project.entities,
+            captionTracks: {
+              ...state.project.entities.captionTracks,
+              [trackId]: { ...track, blocks },
+            },
+          },
+        }),
+        "Trim caption",
+        `caption-trim:${blockId}`,
       );
     }),
 

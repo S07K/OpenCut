@@ -126,6 +126,32 @@ export function shiftBlock(block: CaptionBlock, deltaFrames: number): CaptionBlo
   return { ...block, words, ...blockSpan(words) };
 }
 
+/**
+ * Re-times a block to occupy `[startFrame, endFrame)`, scaling every word to fit.
+ *
+ * Trimming a caption on the timeline should change *when* it shows and for how
+ * long without dropping words, so word timings are stretched or compressed
+ * linearly into the new window. The window is clamped to at least one frame per
+ * word so words never collapse to zero-length (which would break highlighting).
+ */
+export function retimeBlock(block: CaptionBlock, startFrame: Frame, endFrame: Frame): CaptionBlock {
+  const start = Math.max(0, Math.round(startFrame));
+  const minSpan = Math.max(1, block.words.length);
+  const end = Math.max(start + minSpan, Math.round(endFrame));
+
+  const oldStart = block.startFrame;
+  const oldSpan = Math.max(1, block.endFrame - block.startFrame);
+  const scale = (end - start) / oldSpan;
+
+  const words = block.words.map((word) => ({
+    ...word,
+    startFrame: Math.round(start + (word.startFrame - oldStart) * scale),
+    endFrame: Math.round(start + (word.endFrame - oldStart) * scale),
+  }));
+
+  return { ...block, words, ...blockSpan(words) };
+}
+
 /** The block visible at `frame`, or null. Blocks are half-open `[start, end)`. */
 export function blockAtFrame(blocks: readonly CaptionBlock[], frame: Frame): CaptionBlock | null {
   for (const block of blocks) {

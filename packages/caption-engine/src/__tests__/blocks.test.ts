@@ -7,6 +7,7 @@ import {
   buildBlocks,
   editWord,
   mergeBlocks,
+  retimeBlock,
   shiftBlock,
   splitBlock,
 } from "../blocks";
@@ -146,6 +147,34 @@ describe("shiftBlock", () => {
   it("is a no-op for zero delta", () => {
     const source = block([word("a", 10, 20)]);
     expect(shiftBlock(source, 0)).toBe(source);
+  });
+});
+
+describe("retimeBlock", () => {
+  it("scales word timings into a new, wider window", () => {
+    // Block spans 10..30 (span 20); retime to 100..140 (span 40) → 2× scale.
+    const result = retimeBlock(block([word("a", 10, 20), word("b", 20, 30)]), 100, 140);
+    expect(result.startFrame).toBe(100);
+    expect(result.endFrame).toBe(140);
+    expect(result.words.map((w) => [w.startFrame, w.endFrame])).toEqual([
+      [100, 120],
+      [120, 140],
+    ]);
+  });
+
+  it("compresses into a narrower window", () => {
+    const result = retimeBlock(block([word("a", 0, 20), word("b", 20, 40)]), 0, 20);
+    expect(result.endFrame).toBe(20);
+    expect(result.words.map((w) => w.endFrame)).toEqual([10, 20]);
+  });
+
+  it("enforces at least one frame per word", () => {
+    const result = retimeBlock(block([word("a", 0, 10), word("b", 10, 20)]), 50, 50);
+    expect(result.endFrame - result.startFrame).toBeGreaterThanOrEqual(2);
+  });
+
+  it("never lets the window start below zero", () => {
+    expect(retimeBlock(block([word("a", 0, 10)]), -20, 10).startFrame).toBe(0);
   });
 });
 

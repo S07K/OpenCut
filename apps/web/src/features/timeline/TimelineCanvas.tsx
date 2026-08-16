@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { Frame, Id } from "@opencut/types";
-import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag } from "@opencut/timeline-engine";
+import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag, snapFrame } from "@opencut/timeline-engine";
 import {
   hitTestCaptionBlock,
   hitTestClip,
@@ -60,6 +60,14 @@ type DragMode =
       blockId: Id;
       /** Frame offset between the pointer and the block's start, held constant. */
       grabOffsetFrames: number;
+      /** Block length at grab time, so both edges can be snap-tested during the move. */
+      durationFrames: number;
+    }
+  | {
+      kind: "trim-caption";
+      trackId: Id;
+      blockId: Id;
+      edge: "start" | "end";
     };
 
 export function TimelineCanvas() {
@@ -91,6 +99,7 @@ export function TimelineCanvas() {
   const moveClipTo = useEditorStore((state) => state.moveClipTo);
   const updateClip = useEditorStore((state) => state.updateClip);
   const moveCaptionBlock = useEditorStore((state) => state.moveCaptionBlock);
+  const trimCaptionBlock = useEditorStore((state) => state.trimCaptionBlock);
   const endGesture = useEditorStore((state) => state.endGesture);
 
   const captionTracks = useEditorStore(
@@ -236,17 +245,28 @@ export function TimelineCanvas() {
         return;
       }
 
-      // Caption blocks live in their own lanes below the clip tracks; grabbing
-      // one starts a horizontal move so it can be synced to the audio.
+      // Caption blocks live in their own lanes below the clip tracks. Grab the
+      // body to move it (sync to audio), or an end handle to trim its window.
       const captionHit = hitTestCaptionBlock(x, y, captionRectsRef.current);
       if (captionHit) {
         clearSelection();
-        dragRef.current = {
-          kind: "move-caption",
-          trackId: captionHit.trackId,
-          blockId: captionHit.block.id,
-          grabOffsetFrames: frame - captionHit.block.startFrame,
-        };
+        const { rect, zone } = captionHit;
+        if (zone === "trim-start" || zone === "trim-end") {
+          dragRef.current = {
+            kind: "trim-caption",
+            trackId: rect.trackId,
+            blockId: rect.block.id,
+            edge: zone === "trim-start" ? "start" : "end",
+          };
+        } else {
+          dragRef.current = {
+            kind: "move-caption",
+            trackId: rect.trackId,
+            blockId: rect.block.id,
+            grabOffsetFrames: frame - rect.block.startFrame,
+            durationFrames: rect.block.endFrame - rect.block.startFrame,
+          };
+        }
         return;
       }
 
@@ -339,8 +359,45 @@ export function TimelineCanvas() {
       }
 
       if (drag.kind === "move-caption") {
-        const target = Math.max(0, frame - drag.grabOffsetFrames);
-        moveCaptionBlock(drag.trackId, drag.blockId, target);
+        const proposedStart = frame - drag.grabOffsetFrames;
+        let nextStart = Math.max(0, proposedStart);
+        let guide: Frame | null = null;
+        if (snapEnabled) {
+          // Snap both edges to clip edges / playhead / markers, so a caption
+          // lands exactly on the audio it belongs to.
+          const result = snapClipDrag(proposedStart, drag.durationFrames, {
+            clips,
+            markers,
+            playhead,
+            excludeClipIds: new Set(),
+            pixelsPerFrame,
+            thresholdPx: DEFAULT_SNAP_THRESHOLD_PX,
+          });
+          nextStart = Math.max(0, result.frame);
+          guide = result.target ? result.target.frame : null;
+        }
+        setSnapGuideFrame(guide);
+        moveCaptionBlock(drag.trackId, drag.blockId, nextStart);
+        return;
+      }
+
+      if (drag.kind === "trim-caption") {
+        let target = Math.max(0, frame);
+        let guide: Frame | null = null;
+        if (snapEnabled) {
+          const result = snapFrame(frame, {
+            clips,
+            markers,
+            playhead,
+            excludeClipIds: new Set(),
+            pixelsPerFrame,
+            thresholdPx: DEFAULT_SNAP_THRESHOLD_PX,
+          });
+          target = Math.max(0, result.frame);
+          guide = result.target ? result.target.frame : null;
+        }
+        setSnapGuideFrame(guide);
+        trimCaptionBlock(drag.trackId, drag.blockId, drag.edge, target);
         return;
       }
 
@@ -392,6 +449,7 @@ export function TimelineCanvas() {
       moveClipTo,
       updateClip,
       moveCaptionBlock,
+      trimCaptionBlock,
     ],
   );
 
@@ -422,7 +480,8 @@ export function TimelineCanvas() {
       if (
         dragRef.current.kind === "move-clip" ||
         dragRef.current.kind === "move-keyframe" ||
-        dragRef.current.kind === "move-caption"
+        dragRef.current.kind === "move-caption" ||
+        dragRef.current.kind === "trim-caption"
       ) {
         endGesture();
       }

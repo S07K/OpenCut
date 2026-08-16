@@ -108,18 +108,29 @@ export function visibleCaptionBlocks(
   return rects;
 }
 
-/** The caption block under a point, topmost first. */
+export interface CaptionBlockHit {
+  rect: CaptionBlockRect;
+  zone: ClipHitZone;
+}
+
+/**
+ * The caption block under a point, topmost first, with which zone was hit — the
+ * body (move) or an end handle (trim), mirroring how clips are grabbed.
+ */
 export function hitTestCaptionBlock(
   x: number,
   y: number,
   rects: readonly CaptionBlockRect[],
-): CaptionBlockRect | null {
+): CaptionBlockHit | null {
   for (let index = rects.length - 1; index >= 0; index -= 1) {
     const rect = rects[index];
     if (!rect) continue;
-    if (x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height) {
-      return rect;
-    }
+    if (x < rect.x || x > rect.x + rect.width || y < rect.y || y > rect.y + rect.height) continue;
+
+    const canTrim = rect.width > TRIM_HANDLE_WIDTH * 3;
+    if (canTrim && x <= rect.x + TRIM_HANDLE_WIDTH) return { rect, zone: "trim-start" };
+    if (canTrim && x >= rect.x + rect.width - TRIM_HANDLE_WIDTH) return { rect, zone: "trim-end" };
+    return { rect, zone: "body" };
   }
   return null;
 }
