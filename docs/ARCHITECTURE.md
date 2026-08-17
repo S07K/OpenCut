@@ -24,18 +24,18 @@ that what you export matches what you previewed.
 
 Dependencies point **downward only**. A cycle here is a bug, not a style issue.
 
-| Layer        | Packages                                                                                                                   | Constraint                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Domain       | `types`, `utils`                                                                                                           | Zero dependencies. Pure TS. No React, no DOM.           |
-| Engines      | `timeline-engine`, `animation-engine`, `mask-engine`, `color-engine`, `effects-engine`, `history-engine`, `caption-engine` | Pure logic and math. No React, no canvas. Runs in Node. |
-| Adapters     | `media-engine`, `render-engine`, `export-engine`                                                                           | Browser APIs live here, behind interfaces.              |
-| Presentation | `ui`, `hooks`, `apps/web`                                                                                                  | React. Owns no business logic.                          |
-| Extension    | `plugin-sdk`                                                                                                               | A frozen, versioned re-export of the layers above.      |
+| Layer        | Packages                                                                                                                                    | Constraint                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Domain       | `types`, `utils`                                                                                                                            | Zero dependencies. Pure TS. No React, no DOM.           |
+| Engines      | `timeline-engine`, `animation-engine`, `render-engine`, `mask-engine`, `color-engine`, `effects-engine`, `history-engine`, `caption-engine` | Pure logic and math. No React, no canvas. Runs in Node. |
+| Adapters     | `media-engine`, `export-engine`, `project-io`, `playback-engine`                                                                            | Browser APIs live here, behind interfaces.              |
+| Presentation | `ui`, `apps/web`                                                                                                                            | React. Owns no business logic.                          |
+| Extension    | `plugin-sdk` _(planned)_                                                                                                                    | A frozen, versioned re-export of the layers above.      |
 
 **Why engines must not import React:** it makes the export path runnable
 headless in Node with no refactor, and it makes timeline logic testable in
-milliseconds instead of through Playwright. The 36 tests in `timeline-engine`
-run in under 10ms — that is only possible because nothing in it touches a DOM.
+milliseconds instead of through a browser. The `timeline-engine` suite runs in a
+few milliseconds — only possible because nothing in it touches a DOM.
 
 ## Document invariants
 
@@ -98,26 +98,41 @@ realtime preview and the headless exporter both consume it, so there is exactly
 one implementation of "what does frame N look like".
 
 Backends decide _how_ to draw. **PixiJS (WebGL)** is the preview backend, because
-color grading, blur, and masks are shader problems. React Konva is reserved for
-the mask pen-tool overlay, where vector editing UI is genuinely its strength.
+color grading, blur, and masks are shader problems. Mask _editing_ is drawn as a
+lightweight **SVG overlay** on top of the canvas, where vector handles and hit
+targets are genuinely SVG's strength; the mask geometry it edits is resolved by
+`mask-engine` and filled by Pixi, so the overlay never renders the final result.
 
 ### Rules the Pixi backend must keep
 
 Each of these was a bug before it was a rule:
 
+- **One canvas per Pixi `Application`.** React owns a container `<div>`; each
+  `Application` gets its own freshly-created `<canvas>`, removed on teardown —
+  never a single shared canvas. Pixi init is async and StrictMode/HMR mount the
+  effect twice, so two Applications can briefly coexist; if they shared a canvas,
+  destroying the first would release that canvas's WebGL context and kill the
+  second. This presented as "could not initialise shader" / "context lost" and
+  looked like a dead sandbox until it was isolated to this.
 - **Never let Pixi remove the canvas.** `app.destroy(true, …)` means
-  `removeView: true`, which deletes the element React owns. React then renders
-  into a detached node and the preview silently disappears — StrictMode's
-  double-mount triggers it every time in development. Always
-  `destroy({ removeView: false }, …)`.
+  `removeView: true`, which deletes the element. Always
+  `destroy({ removeView: false }, …)` and remove the canvas yourself.
 - **Await init before destroy.** Pixi's init is async, React's cleanup is not.
   Tearing down mid-init leaves a half-built Application holding a WebGL context.
+- **`filters = null`, never `[]`, when a clip has none.** An empty filter list
+  still triggers a filter render pass, and that pass over a _masked_ object
+  renders it solid black — so masks appeared to erase content rather than reveal
+  the layer behind. Set `null` to skip the pass.
 - **Reconcile display objects by clip id.** Rebuilding the stage per frame
   thrashes the GPU and discards uploaded textures.
 - **Handle WebGL context loss.** Contexts are taken away by driver resets, power
   events, and too many live contexts. Without a `webglcontextlost` handler that
   calls `preventDefault`, the browser never offers a restore and the preview is
   a blank frame with no explanation.
+
+The top track in the timeline draws in **front** (earlier in `trackOrder` = higher
+z), the standard NLE convention. Layering, masking-to-reveal, overlays, and
+picture-in-picture all fall out of this plus per-clip opacity.
 
 ## Undo/redo
 
@@ -185,20 +200,46 @@ before their parents', so the first measurement of anything inside `SplitPane`
 is legitimately `0` — and any code gated on `width > 0` would never mount. Some
 embedded WebKit builds also never fire the observer at all.
 
-## Planned decisions not yet implemented
+## Export
 
-Recorded here so they are not silently relitigated:
+`export-engine` is pure and generic over an opaque frame type, so it never names
+`VideoFrame` or a muxer. It plans which frames to render, drives the
+render→encode loop, reports progress, and handles cancellation, all through two
+interfaces — `FrameSource<TFrame>` and `VideoWriter<TFrame>` — that the browser
+backends bind to the real types. Because the frame source is
+`resolveScene` → the same Pixi compositor as preview, the file matches the
+preview frame for frame.
 
-- **WebCodecs first, FFmpeg.wasm as fallback.** WebCodecs is far faster but does
-  not mux and has uneven browser coverage. An `ExportBackend` interface selects
-  between `WebCodecsBackend`, `FFmpegWasmBackend`, and an optional `NodeBackend`
-  by runtime capability probe.
+- **WebCodecs, muxed with `mp4-muxer` / `webm-muxer`** (both MIT, in-browser, no
+  paid API). `VideoEncoder` runs in `realtime` latency mode (no B-frames, so
+  decode order == presentation order); audio is mixed offline through an
+  `OfflineAudioContext`, encoded with `AudioEncoder`, and muxed into the same
+  container. A `NodeBackend` and an FFmpeg.wasm fallback are possible future
+  backends behind the same `VideoWriter` seam, but are not built — WebCodecs
+  coverage in modern Chromium made them unnecessary for now.
+- **Frame accuracy** is currently bounded by `<video>` seeking; a WebCodecs
+  `VideoDecoder` frame source is the planned refinement, and slots in behind the
+  same `FrameSource` interface with no engine change.
+
+## Transitions
+
+A transition is stored on the **incoming** clip (`Clip.transitionIn`), so a cut
+owns exactly one transition and the two sides can't disagree. It lives in the
+pure resolver: `transitionOpacity()` drives both visibility and opacity — the
+incoming clip fades in over its first _D_ frames, and the outgoing clip is
+rendered _past its own end_ (a tail) fading out, so the two overlap across the
+cut. `crossfade` dissolves them; `dip` routes both through black. Preview and
+export share the resolver, so a transition renders identically in both.
+
+## Other decisions, recorded so they are not silently relitigated
+
 - **Commands, not `setState`.** _(Revised — see "Undo/redo" above.)_ History
   stores snapshots rather than invertible commands; intent still lives at the
   action layer, which is what macros and scripting will build on.
-- **Audio clock is the master clock.** _(Implemented.)_ See below.
+- **Audio clock is the master clock.** _(Implemented.)_ See "The transport".
 - **Timeline renders to canvas, not DOM.** DOM timelines degrade badly past
-  roughly 200 clips. _(Implemented.)_
+  roughly 200 clips. _(Implemented — clips, captions, and the ruler all draw to
+  one canvas.)_
 
 ## Local-first, always
 

@@ -1,13 +1,15 @@
 # Cutaway
 
-An open-source, local-first, AI-powered video editor for creators.
+An open-source, local-first, AI-ready video editor for creators — running
+entirely in your browser.
 
-Not a Premiere clone. The goal is the simplicity of CapCut, the motion
-capabilities of After Effects, the UX of Figma, and the openness of Blender —
-running entirely in your browser.
+Not a Premiere clone. The goal is the simplicity of CapCut, the motion of After
+Effects, the UX of Figma, and the openness of Blender.
 
-> **Status: early.** Phase 1 of 6. The shell, timeline, and document format are
-> real and tested; the preview renderer and export pipeline are not built yet.
+> **Status: in active development.** The full editing loop works — import,
+> multi-track timeline, WebGL preview, playback, undo/redo, masking, captions,
+> color, effects, transitions, and **export to MP4/WebM with audio**. What's
+> next is depth: real on-device transcription, chroma key, and the plugin SDK.
 > See [Roadmap](#roadmap).
 
 ## Quick start
@@ -18,7 +20,36 @@ pnpm dev
 ```
 
 Open <http://localhost:3000> and start editing. No account. No cloud. No API
-keys.
+keys. Your footage never leaves your machine.
+
+## What it does
+
+- **Multi-track timeline** — layer video/image clips (backgrounds, overlays,
+  picture-in-picture, watermarks) and audio tracks. Canvas-rendered for speed,
+  with snapping, ripple delete, split, and drag-to-trim. Add tracks as you need
+  them.
+- **Media, local** — import video, audio, and images; everything is stored in
+  IndexedDB and autosaves. Projects save to / open from plain-JSON `.cutaway`
+  files you can diff in git.
+- **WebGL preview** — a PixiJS compositor renders the timeline in realtime. It
+  consumes the _same_ resolved scene the exporter does, so **what you export is
+  what you previewed**.
+- **Motion** — every property is keyframeable, with easing and one-click
+  entrance/exit presets (Fade / Pop / Slide).
+- **Masking & compositing** — rectangle, ellipse, and freeform masks with
+  invert and feather. Mask a clip to reveal the layer behind it.
+- **Captions** — type a caption and it drops onto the timeline as a styled,
+  animated block (TikTok / Hormozi / MrBeast / Instagram / Ali Abdaal styles,
+  with word-by-word highlighting). Blocks are draggable, snap, and trim on the
+  timeline so you can sync them to the audio. Auto-transcription runs behind a
+  swappable provider interface (local Whisper drops in without touching callers).
+- **Color & effects** — color grading (exposure, contrast, saturation, and more)
+  with look presets, plus an open-world effects registry (Gaussian blur, noise,
+  and anything a plugin adds).
+- **Transitions** — crossfade or dip-to-black between adjacent clips.
+- **Export** — WebCodecs encoding muxed to MP4 or WebM, with a mixed audio
+  track, choosable resolution / frame rate / quality, an in/out range, live
+  progress, and cancel. Runs entirely in the browser.
 
 ## Principles
 
@@ -44,13 +75,12 @@ The editor is a pure function of a JSON document. Preview and export walk the
 
 Dependencies point downward only:
 
-| Layer        | Packages                                         | Constraint                      |
-| ------------ | ------------------------------------------------ | ------------------------------- |
-| Domain       | `types`, `utils`                                 | Zero dependencies, pure TS      |
-| Engines      | `timeline-engine`, …                             | Pure logic — no React, no DOM   |
-| Adapters     | `media-engine`, `render-engine`, `export-engine` | Browser APIs, behind interfaces |
-| Presentation | `ui`, `web`                                      | React — owns no business logic  |
-| Extension    | `plugin-sdk`                                     | Frozen re-export of the above   |
+| Layer        | Packages                                                         | Constraint                      |
+| ------------ | ---------------------------------------------------------------- | ------------------------------- |
+| Domain       | `types`, `utils`                                                 | Zero dependencies, pure TS      |
+| Engines      | `timeline-engine`, `animation-engine`, `render-engine`, …        | Pure logic — no React, no DOM   |
+| Adapters     | `media-engine`, `export-engine`, `project-io`, `playback-engine` | Browser APIs, behind interfaces |
+| Presentation | `ui`, `apps/web`                                                 | React — owns no business logic  |
 
 Engines never import React. That is what makes the export path runnable headless
 in Node and keeps the timeline test suite running in milliseconds.
@@ -60,27 +90,26 @@ changes** — most constraints there exist to avoid a specific known failure mod
 
 ## Stack
 
-Next.js · React · TypeScript · Tailwind · Zustand · PixiJS ·
-WebCodecs with FFmpeg.wasm fallback (planned) · IndexedDB · Vitest · Playwright
+Next.js · React · TypeScript · Tailwind · Zustand · PixiJS (WebGL) · WebCodecs
+with `mp4-muxer` / `webm-muxer` · IndexedDB · pnpm workspaces · Turborepo ·
+Vitest
 
 ## Roadmap
 
 - [x] **Phase 1** — Monorepo, design system, docking layout, canvas timeline, media import
 - [x] **Phase 2** — Preview renderer, project save, playback, undo/redo
-- [ ] **Phase 3** — Animation engine, keyframes, masking
-- [ ] **Phase 4** — Captions via local Whisper
-- [ ] **Phase 5** — Color grading, aspect ratios, effects
-- [ ] **Phase 6** — Export engine, performance, plugin SDK
+- [x] **Phase 3** — Animation engine, keyframes, masking
+- [x] **Phase 4** — Captions (typed + styled + on-timeline), provider interface
+- [x] **Phase 5** — Color grading, aspect ratios, effects, transitions
+- [x] **Phase 6** — Export engine (WebCodecs + muxers, video + audio + range)
 
-Phases 1 and 2 are complete. The preview renderer composites the timeline,
-projects autosave locally and restore on reload, the transport plays back
-against an audio-clock timebase, and every document edit is undoable.
+Next up:
 
-Projects are stored in IndexedDB and can be saved to / opened from `.cutaway`
-files — plain JSON you can diff in git or paste into a bug report. Loading is
-repair-oriented: a corrupt clip is dropped and reported rather than refusing to
-open a project someone has hours of work in. Media blobs no project references
-are swept on startup.
+- [ ] Real on-device transcription (WASM Whisper, WebGPU-accelerated when available)
+- [ ] Chroma key / background removal
+- [ ] Frame-exact video export via a WebCodecs `VideoDecoder` source
+- [ ] The `plugin-sdk` package — a frozen, versioned re-export for third parties
+- [ ] More effects and transitions; documentation and performance passes
 
 ## Development
 
@@ -88,8 +117,12 @@ are swept on startup.
 pnpm dev         # run the editor
 pnpm test        # unit tests across all packages
 pnpm typecheck   # type check everything
+pnpm lint        # lint
+pnpm format      # format (run before committing)
 pnpm build       # production build
 ```
+
+Contributing guide: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ### Shortcuts
 
@@ -99,17 +132,12 @@ pnpm build       # production build
 | `←` / `→`        | Step one frame (`Shift` for ten) |
 | `S`              | Split at playhead                |
 | `N`              | Toggle snapping                  |
+| `I` / `O`        | Set export in-point / out-point  |
 | `Delete`         | Ripple delete selection          |
+| `Cmd/Ctrl` + `Z` | Undo (`Shift` to redo)           |
 | `Cmd/Ctrl` + `S` | Save now                         |
 | `+` / `-`        | Zoom timeline                    |
 | `Home` / `End`   | Jump to start / end              |
-
-## Contributing
-
-Contributions welcome. Every engine package should keep its unit tests passing
-and stay free of React and DOM imports. New object kinds, effects, and caption
-presets should go through the existing extension points rather than adding
-special cases to the renderer.
 
 ## License
 
