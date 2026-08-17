@@ -7,7 +7,7 @@
  * picked from resolution) is testable on its own.
  */
 
-import type { ExportSettings, Size } from "@opencut/types";
+import type { ExportSettings, Size } from "@cutaway/types";
 
 /**
  * The WebCodecs codec string for a video codec at a given resolution.

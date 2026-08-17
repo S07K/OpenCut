@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExportPlan, VideoWriter } from "@opencut/export-engine";
+import type { ExportPlan, VideoWriter } from "@cutaway/export-engine";
 import type { MediaContainer } from "./MediaContainer";
 import type { ResolvedVideoConfig } from "./capabilities";
 

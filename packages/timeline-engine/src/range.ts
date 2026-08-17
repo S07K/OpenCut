@@ -7,7 +7,7 @@
  * definitions. Closed ranges make every one of those a special case.
  */
 
-import type { Clip, Frame, FrameRange } from "@opencut/types";
+import type { Clip, Frame, FrameRange } from "@cutaway/types";
 
 export function rangeOf(clip: Clip): FrameRange {
   return { start: clip.startFrame, end: clip.startFrame + clip.durationFrames };

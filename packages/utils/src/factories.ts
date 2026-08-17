@@ -20,8 +20,8 @@ import type {
   Track,
   TrackKind,
   Transform,
-} from "@opencut/types";
-import { SCHEMA_VERSION, staticValue } from "@opencut/types";
+} from "@cutaway/types";
+import { SCHEMA_VERSION, staticValue } from "@cutaway/types";
 import { createId } from "./id";
 
 export function createTransform(overrides: Partial<Transform> = {}): Transform {

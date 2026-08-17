@@ -6,9 +6,9 @@
  * the clip is created by drag-drop, by the command palette, or by a plugin.
  */
 
-import type { Clip, ClipContent, Id, MediaAsset, Size } from "@opencut/types";
-import { staticValue } from "@opencut/types";
-import { createClip } from "@opencut/utils";
+import type { Clip, ClipContent, Id, MediaAsset, Size } from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
+import { createClip } from "@cutaway/utils";
 import { assetDurationInFrames } from "./import";
 
 /** Builds the content payload matching an asset's kind. */

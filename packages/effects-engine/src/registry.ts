@@ -12,7 +12,7 @@
  * pure and free of any renderer dependency.
  */
 
-import type { EffectDefinition } from "@opencut/types";
+import type { EffectDefinition } from "@cutaway/types";
 
 export class EffectRegistry {
   private readonly definitions = new Map<string, EffectDefinition>();

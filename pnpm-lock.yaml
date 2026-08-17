@@ -29,49 +29,49 @@ importers:
 
   apps/web:
     dependencies:
-      '@opencut/animation-engine':
+      '@cutaway/animation-engine':
         specifier: workspace:*
         version: link:../../packages/animation-engine
-      '@opencut/caption-engine':
+      '@cutaway/caption-engine':
         specifier: workspace:*
         version: link:../../packages/caption-engine
-      '@opencut/color-engine':
+      '@cutaway/color-engine':
         specifier: workspace:*
         version: link:../../packages/color-engine
-      '@opencut/effects-engine':
+      '@cutaway/effects-engine':
         specifier: workspace:*
         version: link:../../packages/effects-engine
-      '@opencut/export-engine':
+      '@cutaway/export-engine':
         specifier: workspace:*
         version: link:../../packages/export-engine
-      '@opencut/history-engine':
+      '@cutaway/history-engine':
         specifier: workspace:*
         version: link:../../packages/history-engine
-      '@opencut/mask-engine':
+      '@cutaway/mask-engine':
         specifier: workspace:*
         version: link:../../packages/mask-engine
-      '@opencut/media-engine':
+      '@cutaway/media-engine':
         specifier: workspace:*
         version: link:../../packages/media-engine
-      '@opencut/playback-engine':
+      '@cutaway/playback-engine':
         specifier: workspace:*
         version: link:../../packages/playback-engine
-      '@opencut/project-io':
+      '@cutaway/project-io':
         specifier: workspace:*
         version: link:../../packages/project-io
-      '@opencut/render-engine':
+      '@cutaway/render-engine':
         specifier: workspace:*
         version: link:../../packages/render-engine
-      '@opencut/timeline-engine':
+      '@cutaway/timeline-engine':
         specifier: workspace:*
         version: link:../../packages/timeline-engine
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@opencut/ui':
+      '@cutaway/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@opencut/utils':
+      '@cutaway/utils':
         specifier: workspace:*
         version: link:../../packages/utils
       clsx:
@@ -132,7 +132,7 @@ importers:
 
   packages/animation-engine:
     dependencies:
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
@@ -142,7 +142,7 @@ importers:
 
   packages/caption-engine:
     dependencies:
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
@@ -152,10 +152,10 @@ importers:
 
   packages/color-engine:
     dependencies:
-      '@opencut/animation-engine':
+      '@cutaway/animation-engine':
         specifier: workspace:*
         version: link:../animation-engine
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
@@ -165,10 +165,10 @@ importers:
 
   packages/effects-engine:
     dependencies:
-      '@opencut/animation-engine':
+      '@cutaway/animation-engine':
         specifier: workspace:*
         version: link:../animation-engine
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
@@ -178,7 +178,7 @@ importers:
 
   packages/export-engine:
     dependencies:
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
@@ -194,10 +194,10 @@ importers:
 
   packages/mask-engine:
     dependencies:
-      '@opencut/animation-engine':
+      '@cutaway/animation-engine':
         specifier: workspace:*
         version: link:../animation-engine
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
@@ -207,10 +207,10 @@ importers:
 
   packages/media-engine:
     dependencies:
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
-      '@opencut/utils':
+      '@cutaway/utils':
         specifier: workspace:*
         version: link:../utils
     devDependencies:
@@ -220,7 +220,7 @@ importers:
 
   packages/playback-engine:
     dependencies:
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
@@ -230,10 +230,10 @@ importers:
 
   packages/project-io:
     dependencies:
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
-      '@opencut/utils':
+      '@cutaway/utils':
         specifier: workspace:*
         version: link:../utils
     devDependencies:
@@ -243,26 +243,26 @@ importers:
 
   packages/render-engine:
     dependencies:
-      '@opencut/animation-engine':
+      '@cutaway/animation-engine':
         specifier: workspace:*
         version: link:../animation-engine
-      '@opencut/caption-engine':
+      '@cutaway/caption-engine':
         specifier: workspace:*
         version: link:../caption-engine
-      '@opencut/color-engine':
+      '@cutaway/color-engine':
         specifier: workspace:*
         version: link:../color-engine
-      '@opencut/effects-engine':
+      '@cutaway/effects-engine':
         specifier: workspace:*
         version: link:../effects-engine
-      '@opencut/mask-engine':
+      '@cutaway/mask-engine':
         specifier: workspace:*
         version: link:../mask-engine
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
-      '@opencut/utils':
+      '@cutaway/utils':
         specifier: workspace:*
         version: link:../utils
       vitest:
@@ -271,7 +271,7 @@ importers:
 
   packages/timeline-engine:
     dependencies:
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
@@ -305,7 +305,7 @@ importers:
 
   packages/utils:
     dependencies:
-      '@opencut/types':
+      '@cutaway/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:

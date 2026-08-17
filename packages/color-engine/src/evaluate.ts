@@ -8,8 +8,8 @@
  * rendering, so preview and export grade identically.
  */
 
-import type { ColorGrade, Vec2 } from "@opencut/types";
-import { evaluate } from "@opencut/animation-engine";
+import type { ColorGrade, Vec2 } from "@cutaway/types";
+import { evaluate } from "@cutaway/animation-engine";
 
 /** A colour wheel resolved to concrete numbers. */
 export interface ResolvedWheel {

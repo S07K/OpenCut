@@ -45,7 +45,7 @@ function normalize(sizes: number[]): number[] {
 function readStoredSizes(storageKey: string | undefined, count: number): number[] | null {
   if (!storageKey || typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(`opencut.split.${storageKey}`);
+    const raw = window.localStorage.getItem(`cutaway.split.${storageKey}`);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length !== count) return null;
@@ -86,7 +86,7 @@ export function SplitPane({ direction, panes, storageKey, className }: SplitPane
   useEffect(() => {
     if (!storageKey || typeof window === "undefined" || draggingIndex !== null) return;
     try {
-      window.localStorage.setItem(`opencut.split.${storageKey}`, JSON.stringify(sizes));
+      window.localStorage.setItem(`cutaway.split.${storageKey}`, JSON.stringify(sizes));
     } catch {
       // Private browsing or a full quota — losing layout memory is acceptable.
     }

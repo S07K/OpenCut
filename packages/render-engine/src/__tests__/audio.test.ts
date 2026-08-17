@@ -6,9 +6,9 @@ import type {
   ProjectDocument,
   Track,
   VideoContent,
-} from "@opencut/types";
-import { staticValue } from "@opencut/types";
-import { createClip, createProject, createTrack } from "@opencut/utils";
+} from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
+import { createClip, createProject, createTrack } from "@cutaway/utils";
 import { resolveAudioTimeline } from "../audio";
 
 function audioContent(over: Partial<AudioContent> = {}): AudioContent {

@@ -4,7 +4,7 @@ import { computePeaks, deserializeWaveform, mixToMono, serializeWaveform } from 
 import { MemoryMediaStore } from "../storage";
 import { assetDurationInFrames, DEFAULT_STILL_DURATION_SECONDS } from "../import";
 import { collectGarbage } from "../gc";
-import type { MediaAsset } from "@opencut/types";
+import type { MediaAsset } from "@cutaway/types";
 
 describe("classifyFile", () => {
   it("classifies by MIME type", () => {

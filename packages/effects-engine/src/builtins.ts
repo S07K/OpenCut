@@ -9,7 +9,7 @@
  * renderer branch would show a control that does nothing.
  */
 
-import type { EffectDefinition } from "@opencut/types";
+import type { EffectDefinition } from "@cutaway/types";
 
 export const EFFECT_BLUR = "core.blur.gaussian";
 export const EFFECT_NOISE = "core.stylize.noise";

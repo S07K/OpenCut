@@ -23,13 +23,13 @@ import type {
   ProjectDocument,
   Size,
   Vec2,
-} from "@opencut/types";
-import type { CaptionPreset } from "@opencut/types";
-import { evaluate } from "@opencut/animation-engine";
-import { resolveMasks, type ResolvedMask } from "@opencut/mask-engine";
-import { activeWordIndex, blockAtFrame, getCaptionPreset } from "@opencut/caption-engine";
-import { isNeutralGrade, resolveGrade, type ResolvedGrade } from "@opencut/color-engine";
-import { resolveEffects, type ResolvedEffect } from "@opencut/effects-engine";
+} from "@cutaway/types";
+import type { CaptionPreset } from "@cutaway/types";
+import { evaluate } from "@cutaway/animation-engine";
+import { resolveMasks, type ResolvedMask } from "@cutaway/mask-engine";
+import { activeWordIndex, blockAtFrame, getCaptionPreset } from "@cutaway/caption-engine";
+import { isNeutralGrade, resolveGrade, type ResolvedGrade } from "@cutaway/color-engine";
+import { resolveEffects, type ResolvedEffect } from "@cutaway/effects-engine";
 
 /** A transform with every animated property resolved to a concrete value. */
 export interface ResolvedTransform {

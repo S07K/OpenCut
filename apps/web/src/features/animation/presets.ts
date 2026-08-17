@@ -1,4 +1,4 @@
-import type { Easing } from "@opencut/types";
+import type { Easing } from "@cutaway/types";
 
 /**
  * Animation presets — authored as data.

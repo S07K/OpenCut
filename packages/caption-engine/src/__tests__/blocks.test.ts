@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CaptionBlock, CaptionWord } from "@opencut/types";
+import type { CaptionBlock, CaptionWord } from "@cutaway/types";
 import {
   activeWordIndex,
   blockAtFrame,

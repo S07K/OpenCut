@@ -13,8 +13,8 @@
  * caller-visible result — see `importFile`.
  */
 
-import type { MediaAsset, MediaKind } from "@opencut/types";
-import { createId } from "@opencut/utils";
+import type { MediaAsset, MediaKind } from "@cutaway/types";
+import { createId } from "@cutaway/utils";
 import { classifyFile } from "./mime";
 import { generateThumbnail, probeMedia } from "./probe";
 import type { MediaBlobStore } from "./storage";

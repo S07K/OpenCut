@@ -1,8 +1,8 @@
 "use client";
 
-import type { FrameSource } from "@opencut/export-engine";
-import { resolveScene, type Scene } from "@opencut/render-engine";
-import type { ProjectDocument, Size } from "@opencut/types";
+import type { FrameSource } from "@cutaway/export-engine";
+import { resolveScene, type Scene } from "@cutaway/render-engine";
+import type { ProjectDocument, Size } from "@cutaway/types";
 import { MediaTextureCache } from "@/features/preview/MediaTextureCache";
 import { PixiSceneRenderer } from "@/features/preview/PixiSceneRenderer";
 

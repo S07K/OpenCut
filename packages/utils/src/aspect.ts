@@ -7,7 +7,7 @@
  * squashed frame. Pure — the store applies the result.
  */
 
-import type { AspectRatioPreset, Size } from "@opencut/types";
+import type { AspectRatioPreset, Size } from "@cutaway/types";
 
 export interface AspectRatioOption {
   id: Exclude<AspectRatioPreset, "custom">;

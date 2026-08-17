@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import type { Clip, EllipseMaskShape, Mask, RectangleMaskShape, Vec2 } from "@opencut/types";
-import { evaluate, setValueAt } from "@opencut/animation-engine";
+import type { Clip, EllipseMaskShape, Mask, RectangleMaskShape, Vec2 } from "@cutaway/types";
+import { evaluate, setValueAt } from "@cutaway/animation-engine";
 import { useShallow } from "zustand/react/shallow";
 import { useEditorStore } from "@/state/editorStore";
 

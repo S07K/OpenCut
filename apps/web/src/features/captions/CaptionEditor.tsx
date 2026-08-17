@@ -1,11 +1,11 @@
 "use client";
 
 import { Scissors, Trash2 } from "lucide-react";
-import type { CaptionBlock, CaptionTrackData } from "@opencut/types";
-import { editWord, mergeBlocks, splitBlock } from "@opencut/caption-engine";
-import { formatTimecode } from "@opencut/timeline-engine";
-import { createId } from "@opencut/utils";
-import { cn } from "@opencut/ui";
+import type { CaptionBlock, CaptionTrackData } from "@cutaway/types";
+import { editWord, mergeBlocks, splitBlock } from "@cutaway/caption-engine";
+import { formatTimecode } from "@cutaway/timeline-engine";
+import { createId } from "@cutaway/utils";
+import { cn } from "@cutaway/ui";
 import { useEditorStore } from "@/state/editorStore";
 import type { EditorUpdateCaptionTrack } from "./types";
 

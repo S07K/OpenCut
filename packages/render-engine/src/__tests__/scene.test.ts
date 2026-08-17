@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Clip, ProjectDocument, Track } from "@opencut/types";
-import { staticValue } from "@opencut/types";
-import { createClip, createProject, createTrack } from "@opencut/utils";
-import { createEllipseMask } from "@opencut/mask-engine";
-import { createColorGrade } from "@opencut/utils";
+import type { Clip, ProjectDocument, Track } from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
+import { createClip, createProject, createTrack } from "@cutaway/utils";
+import { createEllipseMask } from "@cutaway/mask-engine";
+import { createColorGrade } from "@cutaway/utils";
 import { resolveScene, sourceTimeFor, transitionOpacity } from "../scene";
 
 function videoContent(mediaId = "m1", speed = 1, sourceInFrame = 0) {

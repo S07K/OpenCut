@@ -1,6 +1,6 @@
 "use client";
 
-import type { Clip } from "@opencut/types";
+import type { Clip } from "@cutaway/types";
 import { useShallow } from "zustand/react/shallow";
 import { useEditorStore } from "@/state/editorStore";
 import { groupedProperties } from "./propertySchema";

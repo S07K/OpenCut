@@ -1,4 +1,4 @@
-import type { Animatable, Clip, Vec2 } from "@opencut/types";
+import type { Animatable, Clip, Vec2 } from "@cutaway/types";
 
 /**
  * The registry of animatable clip properties.

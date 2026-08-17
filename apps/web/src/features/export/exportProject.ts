@@ -1,13 +1,13 @@
 "use client";
 
-import type { MediaBlobStore } from "@opencut/media-engine";
+import type { MediaBlobStore } from "@cutaway/media-engine";
 import {
   ExportCancelledError,
   planExport,
   runVideoExport,
   type ExportProgress,
-} from "@opencut/export-engine";
-import type { ExportSettings, ProjectDocument } from "@opencut/types";
+} from "@cutaway/export-engine";
+import type { ExportSettings, ProjectDocument } from "@cutaway/types";
 import { MediaTextureCache } from "@/features/preview/MediaTextureCache";
 import { isExportSupported, resolveAudioConfig, resolveVideoConfig } from "./capabilities";
 import { MediaContainer } from "./MediaContainer";

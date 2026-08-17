@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "OpenCut",
+  title: "Cutaway",
   description: "Open-source, local-first video editor for creators.",
 };
 

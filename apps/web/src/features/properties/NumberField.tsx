@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { cn } from "@opencut/ui";
+import { cn } from "@cutaway/ui";
 
 interface NumberFieldProps {
   value: number;

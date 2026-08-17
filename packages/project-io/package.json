@@ -1,5 +1,5 @@
 {
-  "name": "@opencut/project-io",
+  "name": "@cutaway/project-io",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,8 +14,8 @@
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
-    "@opencut/types": "workspace:*",
-    "@opencut/utils": "workspace:*"
+    "@cutaway/types": "workspace:*",
+    "@cutaway/utils": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.8"

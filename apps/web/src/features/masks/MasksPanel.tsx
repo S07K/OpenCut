@@ -1,10 +1,10 @@
 "use client";
 
 import { Circle, Eye, EyeOff, RectangleHorizontal, Trash2 } from "lucide-react";
-import type { Clip, Mask, Vec2 } from "@opencut/types";
-import { evaluate } from "@opencut/animation-engine";
-import { createEllipseMask, createRectangleMask } from "@opencut/mask-engine";
-import { IconButton, cn } from "@opencut/ui";
+import type { Clip, Mask, Vec2 } from "@cutaway/types";
+import { evaluate } from "@cutaway/animation-engine";
+import { createEllipseMask, createRectangleMask } from "@cutaway/mask-engine";
+import { IconButton, cn } from "@cutaway/ui";
 import { useShallow } from "zustand/react/shallow";
 import { useEditorStore } from "@/state/editorStore";
 

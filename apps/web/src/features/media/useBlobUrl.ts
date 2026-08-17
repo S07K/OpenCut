@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { MediaBlobStore } from "@opencut/media-engine";
+import type { MediaBlobStore } from "@cutaway/media-engine";
 
 /**
  * Resolves a stored blob to an object URL for the lifetime of the component.

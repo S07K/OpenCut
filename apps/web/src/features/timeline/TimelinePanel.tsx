@@ -10,8 +10,8 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { IconButton, Panel } from "@opencut/ui";
-import { formatTimecode } from "@opencut/timeline-engine";
+import { IconButton, Panel } from "@cutaway/ui";
+import { formatTimecode } from "@cutaway/timeline-engine";
 import { TimelineCanvas } from "./TimelineCanvas";
 import { TrackHeaders } from "./TrackHeaders";
 import { useEditorStore } from "@/state/editorStore";

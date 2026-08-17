@@ -1,6 +1,6 @@
 "use client";
 
-import type { CaptionWord } from "@opencut/types";
+import type { CaptionWord } from "@cutaway/types";
 
 /**
  * Transcription behind an interface.

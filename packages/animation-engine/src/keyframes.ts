@@ -11,8 +11,8 @@
  * ever has to re-sort on the hot path.
  */
 
-import type { Animatable, AnimatedValue, Easing, Frame, Keyframe } from "@opencut/types";
-import { EASING_LINEAR } from "@opencut/types";
+import type { Animatable, AnimatedValue, Easing, Frame, Keyframe } from "@cutaway/types";
+import { EASING_LINEAR } from "@cutaway/types";
 
 /** Inserts sorted, or replaces an existing keyframe on the exact frame. */
 function upsertKeyframe<T>(keyframes: readonly Keyframe<T>[], next: Keyframe<T>): Keyframe<T>[] {

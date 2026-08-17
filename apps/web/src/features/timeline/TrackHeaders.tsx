@@ -11,7 +11,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { IconButton, cn } from "@opencut/ui";
+import { IconButton, cn } from "@cutaway/ui";
 import { useShallow } from "zustand/react/shallow";
 import { CAPTION_LANE_HEIGHT, RULER_HEIGHT, TRACK_GAP } from "./geometry";
 import { selectOrderedTracks, useEditorStore } from "@/state/editorStore";

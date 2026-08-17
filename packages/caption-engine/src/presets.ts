@@ -7,7 +7,7 @@
  * are starting points, every field editable per track.
  */
 
-import type { CaptionPreset } from "@opencut/types";
+import type { CaptionPreset } from "@cutaway/types";
 
 export const CAPTION_PRESETS: CaptionPreset[] = [
   {

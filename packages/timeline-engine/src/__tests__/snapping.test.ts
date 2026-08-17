@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Marker } from "@opencut/types";
+import type { Marker } from "@cutaway/types";
 import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag, snapFrame, type SnapContext } from "../snapping";
 import { makeClip } from "./fixtures";
 

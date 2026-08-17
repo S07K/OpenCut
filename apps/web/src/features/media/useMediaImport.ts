@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { createMediaStore, importFiles, type MediaBlobStore } from "@opencut/media-engine";
+import { createMediaStore, importFiles, type MediaBlobStore } from "@cutaway/media-engine";
 import { useEditorStore } from "@/state/editorStore";
 
 /**

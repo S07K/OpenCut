@@ -1,5 +1,5 @@
 /**
- * `@opencut/mask-engine` — evaluating masks into drawable geometry.
+ * `@cutaway/mask-engine` — evaluating masks into drawable geometry.
  *
  * Pure and DOM-free. Every mask kind reduces to one `ResolvedMask` polygon, so
  * the compositor applies a single masking implementation regardless of how the

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { staticValue } from "@opencut/types";
-import type { Mask } from "@opencut/types";
+import { staticValue } from "@cutaway/types";
+import type { Mask } from "@cutaway/types";
 import {
   ELLIPSE_SEGMENTS,
   expandPolygon,

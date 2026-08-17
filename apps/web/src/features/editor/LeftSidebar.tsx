@@ -10,7 +10,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
-import { Panel, cn } from "@opencut/ui";
+import { Panel, cn } from "@cutaway/ui";
 import { MediaPanel } from "@/features/media/MediaPanel";
 import { CaptionsPanel } from "@/features/captions/CaptionsPanel";
 

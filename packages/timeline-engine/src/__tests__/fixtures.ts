@@ -1,5 +1,5 @@
-import type { Clip, VideoContent } from "@opencut/types";
-import { staticValue } from "@opencut/types";
+import type { Clip, VideoContent } from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
 
 /** Builds a minimal but *valid* clip. Tests override only what they care about. */
 export function makeClip(overrides: Partial<Clip> = {}): Clip {

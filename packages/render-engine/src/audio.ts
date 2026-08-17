@@ -11,8 +11,8 @@
  * Audio mixing lives in the adapters.
  */
 
-import type { Animatable, Clip, Frame, ProjectDocument, Unit } from "@opencut/types";
-import { evaluate } from "@opencut/animation-engine";
+import type { Animatable, Clip, Frame, ProjectDocument, Unit } from "@cutaway/types";
+import { evaluate } from "@cutaway/animation-engine";
 
 /** The audio-bearing fields shared by audio clips and video clips. */
 interface ClipAudio {

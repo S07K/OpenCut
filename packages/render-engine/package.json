@@ -1,5 +1,5 @@
 {
-  "name": "@opencut/render-engine",
+  "name": "@cutaway/render-engine",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,19 +14,19 @@
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
-    "@opencut/types": "workspace:*",
-    "@opencut/animation-engine": "workspace:*",
-    "@opencut/mask-engine": "workspace:*",
-    "@opencut/caption-engine": "workspace:*",
-    "@opencut/color-engine": "workspace:*",
-    "@opencut/effects-engine": "workspace:*"
+    "@cutaway/types": "workspace:*",
+    "@cutaway/animation-engine": "workspace:*",
+    "@cutaway/mask-engine": "workspace:*",
+    "@cutaway/caption-engine": "workspace:*",
+    "@cutaway/color-engine": "workspace:*",
+    "@cutaway/effects-engine": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.8",
-    "@opencut/utils": "workspace:*",
-    "@opencut/mask-engine": "workspace:*",
-    "@opencut/caption-engine": "workspace:*",
-    "@opencut/color-engine": "workspace:*",
-    "@opencut/effects-engine": "workspace:*"
+    "@cutaway/utils": "workspace:*",
+    "@cutaway/mask-engine": "workspace:*",
+    "@cutaway/caption-engine": "workspace:*",
+    "@cutaway/color-engine": "workspace:*",
+    "@cutaway/effects-engine": "workspace:*"
   }
 }

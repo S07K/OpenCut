@@ -1,10 +1,10 @@
-import type { Clip, Frame } from "@opencut/types";
+import type { Clip, Frame } from "@cutaway/types";
 import {
   hasKeyframeAt,
   keyframeFrames,
   moveKeyframe,
   removeKeyframe,
-} from "@opencut/animation-engine";
+} from "@cutaway/animation-engine";
 import { propertiesForClip } from "@/features/properties/propertySchema";
 import type { ClipRect, TimelineViewport } from "./geometry";
 import { frameToX } from "./geometry";

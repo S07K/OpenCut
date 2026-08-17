@@ -7,7 +7,7 @@
  * still import with partial metadata rather than being rejected.
  */
 
-import type { MediaKind, MediaMetadata } from "@opencut/types";
+import type { MediaKind, MediaMetadata } from "@cutaway/types";
 import { classifyFile } from "./mime";
 
 /** Loads an object URL, runs `use`, and always revokes the URL afterwards. */

@@ -8,7 +8,7 @@
  * unit-tested without a browser.
  */
 
-import type { ExportSettings, Frame, ProjectDocument, Size } from "@opencut/types";
+import type { ExportSettings, Frame, ProjectDocument, Size } from "@cutaway/types";
 
 /** A validated, backend-agnostic description of an export job. */
 export interface ExportPlan {

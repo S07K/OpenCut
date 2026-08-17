@@ -7,7 +7,7 @@
  * including types plugins introduce that this package has never heard of.
  */
 
-import type { Vec2 } from "@opencut/types";
+import type { Vec2 } from "@cutaway/types";
 
 export function lerp(from: number, to: number, t: number): number {
   return from + (to - from) * t;

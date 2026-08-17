@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import type { Frame, Id } from "@opencut/types";
-import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag, snapFrame } from "@opencut/timeline-engine";
+import type { Frame, Id } from "@cutaway/types";
+import { DEFAULT_SNAP_THRESHOLD_PX, snapClipDrag, snapFrame } from "@cutaway/timeline-engine";
 import {
   hitTestCaptionBlock,
   hitTestClip,

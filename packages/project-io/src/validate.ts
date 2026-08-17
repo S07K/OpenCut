@@ -9,8 +9,8 @@
  * would be the worst possible outcome for someone with hours of work in it.
  */
 
-import type { Clip, MediaAsset, ProjectDocument, Track } from "@opencut/types";
-import { createProject } from "@opencut/utils";
+import type { Clip, MediaAsset, ProjectDocument, Track } from "@cutaway/types";
+import { createProject } from "@cutaway/utils";
 
 export type IssueSeverity = "dropped" | "repaired";
 

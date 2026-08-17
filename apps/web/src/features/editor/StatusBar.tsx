@@ -1,7 +1,7 @@
 "use client";
 
 import { WifiOff } from "lucide-react";
-import { formatDuration } from "@opencut/timeline-engine";
+import { formatDuration } from "@cutaway/timeline-engine";
 import { useEditorStore } from "@/state/editorStore";
 import { SaveIndicator } from "@/features/project/SaveIndicator";
 

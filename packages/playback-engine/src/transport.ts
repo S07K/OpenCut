@@ -11,7 +11,7 @@
  * from `AudioContext.currentTime`, but tests supply plain numbers.
  */
 
-import type { Frame } from "@opencut/types";
+import type { Frame } from "@cutaway/types";
 
 export interface TransportOrigin {
   /** Frame the playhead sat at when playback started. */

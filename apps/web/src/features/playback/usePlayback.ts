@@ -6,7 +6,7 @@ import {
   tick,
   type TransportBounds,
   type TransportOrigin,
-} from "@opencut/playback-engine";
+} from "@cutaway/playback-engine";
 import { AudioEngine } from "./AudioEngine";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
 import { useEditorStore } from "@/state/editorStore";

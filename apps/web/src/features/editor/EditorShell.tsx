@@ -1,6 +1,6 @@
 "use client";
 
-import { SplitPane } from "@opencut/ui";
+import { SplitPane } from "@cutaway/ui";
 import { TopToolbar } from "./TopToolbar";
 import { LeftSidebar } from "./LeftSidebar";
 import { PreviewPanel } from "./PreviewPanel";

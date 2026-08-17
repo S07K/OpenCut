@@ -1,8 +1,8 @@
 "use client";
 
 import { Diamond } from "lucide-react";
-import type { Clip, Vec2 } from "@opencut/types";
-import { cn } from "@opencut/ui";
+import type { Clip, Vec2 } from "@cutaway/types";
+import { cn } from "@cutaway/ui";
 import { NumberField } from "./NumberField";
 import type { PropertyDescriptor } from "./propertySchema";
 import type { ClipPropertyApi } from "./useClipProperties";

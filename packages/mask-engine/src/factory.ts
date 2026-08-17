@@ -7,8 +7,8 @@
  * one.
  */
 
-import type { Mask, MaskShape, Vec2 } from "@opencut/types";
-import { staticValue } from "@opencut/types";
+import type { Mask, MaskShape, Vec2 } from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
 
 let counter = 0;
 function maskId(): string {

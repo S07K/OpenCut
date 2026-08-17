@@ -1,4 +1,4 @@
-# OpenCut
+# Cutaway
 
 An open-source, local-first, AI-powered video editor for creators.
 
@@ -76,7 +76,7 @@ Phases 1 and 2 are complete. The preview renderer composites the timeline,
 projects autosave locally and restore on reload, the transport plays back
 against an audio-clock timebase, and every document edit is undoable.
 
-Projects are stored in IndexedDB and can be saved to / opened from `.opencut`
+Projects are stored in IndexedDB and can be saved to / opened from `.cutaway`
 files — plain JSON you can diff in git or paste into a bug report. Loading is
 repair-oriented: a corrupt clip is dropped and reported rather than refusing to
 open a project someone has hours of work in. Media blobs no project references

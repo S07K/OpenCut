@@ -1,5 +1,5 @@
 /**
- * `@opencut/export-engine` — the headless, backend-agnostic export pipeline.
+ * `@cutaway/export-engine` — the headless, backend-agnostic export pipeline.
  *
  * Pure and DOM-free. It plans which frames to render, drives the render→encode
  * loop, reports progress, and handles cancellation — all through two generic

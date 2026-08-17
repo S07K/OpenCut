@@ -1,8 +1,8 @@
 "use client";
 
-import type { ExportPlan } from "@opencut/export-engine";
-import { audioCodecString, videoCodecString } from "@opencut/export-engine";
-import type { ExportSettings } from "@opencut/types";
+import type { ExportPlan } from "@cutaway/export-engine";
+import { audioCodecString, videoCodecString } from "@cutaway/export-engine";
+import type { ExportSettings } from "@cutaway/types";
 
 /**
  * Browser support probing and container/codec reconciliation for export.

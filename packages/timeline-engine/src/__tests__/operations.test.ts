@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { VideoContent } from "@opencut/types";
+import type { VideoContent } from "@cutaway/types";
 import {
   computeDuration,
   moveClip,

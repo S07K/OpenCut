@@ -10,11 +10,11 @@ import type {
   MediaAsset,
   ProjectDocument,
   Track,
-} from "@opencut/types";
-import { computeDuration, moveClip, rippleDelete, splitClip } from "@opencut/timeline-engine";
-import { retimeBlock, shiftBlock } from "@opencut/caption-engine";
-import { createClipForAsset, trackKindForAsset } from "@opencut/media-engine";
-import { createId, createProject, createTrack } from "@opencut/utils";
+} from "@cutaway/types";
+import { computeDuration, moveClip, rippleDelete, splitClip } from "@cutaway/timeline-engine";
+import { retimeBlock, shiftBlock } from "@cutaway/caption-engine";
+import { createClipForAsset, trackKindForAsset } from "@cutaway/media-engine";
+import { createId, createProject, createTrack } from "@cutaway/utils";
 import {
   canRedo as historyCanRedo,
   canUndo as historyCanUndo,
@@ -27,7 +27,7 @@ import {
   undo as historyUndo,
   undoLabel as historyUndoLabel,
   type History,
-} from "@opencut/history-engine";
+} from "@cutaway/history-engine";
 
 /**
  * Editor state.

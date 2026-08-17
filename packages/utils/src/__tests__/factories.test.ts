@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { staticValue, SCHEMA_VERSION } from "@opencut/types";
+import { staticValue, SCHEMA_VERSION } from "@cutaway/types";
 import { createClip, createProject, createTrack } from "../factories";
 import { createId } from "../id";
 import { ASPECT_RATIOS, aspectForResolution, resolutionForAspect } from "../aspect";

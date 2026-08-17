@@ -12,11 +12,11 @@ import {
   Text,
   TextStyle,
 } from "pixi.js";
-import type { Scene, SceneNode } from "@opencut/render-engine";
-import type { ResolvedEffect } from "@opencut/effects-engine";
-import { EFFECT_BLUR, EFFECT_NOISE } from "@opencut/effects-engine";
-import type { ResolvedMask } from "@opencut/mask-engine";
-import type { Id, MediaAsset } from "@opencut/types";
+import type { Scene, SceneNode } from "@cutaway/render-engine";
+import type { ResolvedEffect } from "@cutaway/effects-engine";
+import { EFFECT_BLUR, EFFECT_NOISE } from "@cutaway/effects-engine";
+import type { ResolvedMask } from "@cutaway/mask-engine";
+import type { Id, MediaAsset } from "@cutaway/types";
 import { MediaTextureCache } from "./MediaTextureCache";
 
 /**

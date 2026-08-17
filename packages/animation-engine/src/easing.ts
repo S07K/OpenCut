@@ -6,7 +6,7 @@
  * CSS would produce — creators move between tools and notice when curves differ.
  */
 
-import type { Easing } from "@opencut/types";
+import type { Easing } from "@cutaway/types";
 
 export function linear(t: number): number {
   return t;

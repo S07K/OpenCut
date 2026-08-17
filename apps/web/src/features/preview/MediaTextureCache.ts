@@ -1,8 +1,8 @@
 "use client";
 
 import { Texture } from "pixi.js";
-import type { MediaBlobStore } from "@opencut/media-engine";
-import type { Id } from "@opencut/types";
+import type { MediaBlobStore } from "@cutaway/media-engine";
+import type { Id } from "@cutaway/types";
 
 /**
  * Resolves media ids to Pixi textures, backed by the blob store.

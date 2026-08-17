@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { collectGarbage } from "@opencut/media-engine";
+import { collectGarbage } from "@cutaway/media-engine";
 import {
   parseProjectFile,
   referencedBlobKeys,
   serializeProject,
   projectFileName,
-} from "@opencut/project-io";
-import type { ProjectDocument } from "@opencut/types";
+} from "@cutaway/project-io";
+import type { ProjectDocument } from "@cutaway/types";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
 import { useEditorStore } from "@/state/editorStore";
 import {
@@ -178,7 +178,7 @@ export function useProjectPersistence(): ProjectPersistence {
       ];
       if (result.fromFuture) {
         messages.unshift(
-          "This project was saved by a newer version of OpenCut; some data may be lost on save.",
+          "This project was saved by a newer version of Cutaway; some data may be lost on save.",
         );
       }
       setLoadIssues(messages);

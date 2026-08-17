@@ -1,4 +1,4 @@
-# OpenCut Architecture
+# Cutaway Architecture
 
 > This document explains **why** the code looks the way it does. If you are about
 > to make a structural change, read this first — most of the constraints here
@@ -39,7 +39,7 @@ run in under 10ms — that is only possible because nothing in it touches a DOM.
 
 ## Document invariants
 
-The `ProjectDocument` in `@opencut/types` obeys three rules that everything
+The `ProjectDocument` in `@cutaway/types` obeys three rules that everything
 downstream assumes:
 
 1. **Plain JSON.** No classes, no `Date`, no `Map`, no cycles. It round-trips

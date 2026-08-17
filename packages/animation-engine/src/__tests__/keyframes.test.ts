@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Animatable } from "@opencut/types";
-import { staticValue } from "@opencut/types";
+import type { Animatable } from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
 import {
   hasKeyframeAt,
   isAnimatedTrack,

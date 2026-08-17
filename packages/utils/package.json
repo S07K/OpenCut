@@ -1,5 +1,5 @@
 {
-  "name": "@opencut/utils",
+  "name": "@cutaway/utils",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
-    "@opencut/types": "workspace:*"
+    "@cutaway/types": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.8"

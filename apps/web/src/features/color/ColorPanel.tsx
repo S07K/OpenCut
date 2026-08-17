@@ -1,11 +1,11 @@
 "use client";
 
-import type { Clip, ColorGrade } from "@opencut/types";
-import { staticValue } from "@opencut/types";
-import { evaluate } from "@opencut/animation-engine";
-import { COLOR_GRADE_PRESETS, type ColorGradePreset } from "@opencut/color-engine";
-import { createColorGrade } from "@opencut/utils";
-import { cn } from "@opencut/ui";
+import type { Clip, ColorGrade } from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
+import { evaluate } from "@cutaway/animation-engine";
+import { COLOR_GRADE_PRESETS, type ColorGradePreset } from "@cutaway/color-engine";
+import { createColorGrade } from "@cutaway/utils";
+import { cn } from "@cutaway/ui";
 import { useEditorStore } from "@/state/editorStore";
 import { NumberField } from "@/features/properties/NumberField";
 

@@ -1,8 +1,8 @@
 "use client";
 
-import type { Id, ProjectDocument } from "@opencut/types";
-import type { MediaBlobStore } from "@opencut/media-engine";
-import { resolveAudioTimeline, type ResolvedAudioClip } from "@opencut/render-engine";
+import type { Id, ProjectDocument } from "@cutaway/types";
+import type { MediaBlobStore } from "@cutaway/media-engine";
+import { resolveAudioTimeline, type ResolvedAudioClip } from "@cutaway/render-engine";
 
 /**
  * Web Audio playback and the master clock.

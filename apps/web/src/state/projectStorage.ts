@@ -1,6 +1,6 @@
 "use client";
 
-import type { Id, ProjectDocument } from "@opencut/types";
+import type { Id, ProjectDocument } from "@cutaway/types";
 
 /**
  * Project persistence in IndexedDB.
@@ -9,13 +9,13 @@ import type { Id, ProjectDocument } from "@opencut/types";
  * small and cheap to write on every autosave while the gigabytes of footage
  * stay untouched.
  *
- * Separate databases rather than a second object store in `opencut`: two places
+ * Separate databases rather than a second object store in `cutaway`: two places
  * opening the same database at different versions throws `VersionError`, and
- * the media store (owned by `@opencut/media-engine`) has no business knowing
+ * the media store (owned by `@cutaway/media-engine`) has no business knowing
  * the project schema. Independent databases let each layer version itself.
  */
 
-const DATABASE_NAME = "opencut-projects";
+const DATABASE_NAME = "cutaway-projects";
 const DATABASE_VERSION = 1;
 const PROJECT_STORE = "projects";
 

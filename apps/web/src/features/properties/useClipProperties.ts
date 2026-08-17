@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import type { Animatable, Clip, Frame } from "@opencut/types";
+import type { Animatable, Clip, Frame } from "@cutaway/types";
 import {
   evaluate,
   hasKeyframeAt,
@@ -10,7 +10,7 @@ import {
   setKeyframe,
   setValueAt,
   toStatic,
-} from "@opencut/animation-engine";
+} from "@cutaway/animation-engine";
 import { useEditorStore } from "@/state/editorStore";
 import type { PropertyDescriptor } from "./propertySchema";
 

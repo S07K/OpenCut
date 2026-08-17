@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { EffectDefinition, EffectInstance } from "@opencut/types";
+import type { EffectDefinition, EffectInstance } from "@cutaway/types";
 import { EffectRegistry } from "../registry";
 import { BUILTIN_EFFECTS, EFFECT_BLUR } from "../builtins";
 import { defaultEffectParams, resolveEffects } from "../resolve";

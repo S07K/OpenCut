@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ExportSettings, ProjectDocument } from "@opencut/types";
+import type { ExportSettings, ProjectDocument } from "@cutaway/types";
 import { planExport, type ExportPlan } from "../plan";
 import type { ExportProgress } from "../progress";
 import type { FrameSource, VideoWriter } from "../providers";

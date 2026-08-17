@@ -1,5 +1,5 @@
 /**
- * `@opencut/types` — the shared domain vocabulary.
+ * `@cutaway/types` — the shared domain vocabulary.
  *
  * This package has **zero dependencies** and contains no runtime logic beyond a
  * handful of constructors and predicates. Every other package depends on it;

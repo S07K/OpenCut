@@ -1,5 +1,5 @@
 /**
- * `@opencut/render-engine` — resolving a project into a drawable scene.
+ * `@cutaway/render-engine` — resolving a project into a drawable scene.
  *
  * Pure and DOM-free. It decides *what* to draw at a given frame; backends
  * decide *how*. The realtime preview and the headless exporter share this one

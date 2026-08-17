@@ -1,9 +1,9 @@
 @import "tailwindcss";
-@import "@opencut/ui/tokens.css";
+@import "@cutaway/ui/tokens.css";
 
 /**
  * Tailwind v4 auto-detects sources, but it does not crawl symlinked workspace
- * packages. Without this, every utility used only inside `@opencut/ui` would be
+ * packages. Without this, every utility used only inside `@cutaway/ui` would be
  * silently dropped from the bundle — panels would render unstyled in production
  * while looking correct in dev.
  */

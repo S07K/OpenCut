@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { resolveScene } from "@opencut/render-engine";
+import { resolveScene } from "@cutaway/render-engine";
 import { MediaTextureCache } from "./MediaTextureCache";
 import { PixiSceneRenderer } from "./PixiSceneRenderer";
 import { probeWebGLSupport } from "./webglSupport";

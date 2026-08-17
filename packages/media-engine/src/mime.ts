@@ -7,7 +7,7 @@
  * and no duration, and the user has no idea why.
  */
 
-import type { MediaKind } from "@opencut/types";
+import type { MediaKind } from "@cutaway/types";
 
 /** Extensions we accept when the browser reports no MIME type at all. */
 const EXTENSION_KINDS: Record<string, MediaKind> = {

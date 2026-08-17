@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { Button, IconButton, cn } from "@opencut/ui";
-import type { ExportFormat, ExportSettings, Size } from "@opencut/types";
-import { describeExport, planExport } from "@opencut/export-engine";
-import { formatTimecode } from "@opencut/timeline-engine";
+import { Button, IconButton, cn } from "@cutaway/ui";
+import type { ExportFormat, ExportSettings, Size } from "@cutaway/types";
+import { describeExport, planExport } from "@cutaway/export-engine";
+import { formatTimecode } from "@cutaway/timeline-engine";
 import { useEditorStore } from "@/state/editorStore";
 import { useExport } from "./useExport";
 

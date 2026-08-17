@@ -1,5 +1,5 @@
 /**
- * `@opencut/ui` — the shared design system.
+ * `@cutaway/ui` — the shared design system.
  *
  * Deliberately small. Every primitive here is one that appears in three or more
  * places in the editor; anything less general belongs in the feature that uses

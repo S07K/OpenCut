@@ -1,12 +1,12 @@
 "use client";
 
 import { Eye, EyeOff, Trash2 } from "lucide-react";
-import type { Clip, EffectDefinition, EffectInstance, EffectParamValue } from "@opencut/types";
-import { staticValue } from "@opencut/types";
-import { evaluate } from "@opencut/animation-engine";
-import { defaultEffectParams, effectRegistry } from "@opencut/effects-engine";
-import { createId } from "@opencut/utils";
-import { IconButton, cn } from "@opencut/ui";
+import type { Clip, EffectDefinition, EffectInstance, EffectParamValue } from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
+import { evaluate } from "@cutaway/animation-engine";
+import { defaultEffectParams, effectRegistry } from "@cutaway/effects-engine";
+import { createId } from "@cutaway/utils";
+import { IconButton, cn } from "@cutaway/ui";
 import { useEditorStore } from "@/state/editorStore";
 import { NumberField } from "@/features/properties/NumberField";
 

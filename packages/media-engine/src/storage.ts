@@ -16,7 +16,7 @@ export interface MediaBlobStore {
   clear(): Promise<void>;
 }
 
-const DATABASE_NAME = "opencut";
+const DATABASE_NAME = "cutaway";
 const DATABASE_VERSION = 1;
 const BLOB_STORE = "media-blobs";
 

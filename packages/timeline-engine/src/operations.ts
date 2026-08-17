@@ -10,7 +10,7 @@
  * so callers can skip pushing a meaningless undo entry.
  */
 
-import type { Clip, Frame, FrameDuration, Id } from "@opencut/types";
+import type { Clip, Frame, FrameDuration, Id } from "@cutaway/types";
 import { rangeOf } from "./range";
 
 /** Minimum clip length. Zero-length clips are unselectable and unrenderable. */

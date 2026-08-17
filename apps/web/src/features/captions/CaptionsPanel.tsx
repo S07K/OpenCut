@@ -2,15 +2,15 @@
 
 import { useCallback, useState } from "react";
 import { Captions as CaptionsIcon, Loader2, Plus, Trash2 } from "lucide-react";
-import type { CaptionTrackData, CaptionWord, Frame } from "@opencut/types";
+import type { CaptionTrackData, CaptionWord, Frame } from "@cutaway/types";
 import {
   buildBlocks,
   CAPTION_PRESETS,
   DEFAULT_CAPTION_PRESET_ID,
   getCaptionPreset,
-} from "@opencut/caption-engine";
-import { createId } from "@opencut/utils";
-import { Button, cn } from "@opencut/ui";
+} from "@cutaway/caption-engine";
+import { createId } from "@cutaway/utils";
+import { Button, cn } from "@cutaway/ui";
 import { useShallow } from "zustand/react/shallow";
 import { useEditorStore } from "@/state/editorStore";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";

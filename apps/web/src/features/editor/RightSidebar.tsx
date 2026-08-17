@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Panel, cn } from "@opencut/ui";
+import { Panel, cn } from "@cutaway/ui";
 import { PropertiesPanel } from "@/features/properties/PropertiesPanel";
 import { MasksPanel } from "@/features/masks/MasksPanel";
 import { ColorPanel } from "@/features/color/ColorPanel";

@@ -6,7 +6,7 @@
  * is how one-frame drift creeps in.
  */
 
-import type { Frame } from "@opencut/types";
+import type { Frame } from "@cutaway/types";
 
 export function framesToSeconds(frames: Frame, fps: number): number {
   return frames / fps;

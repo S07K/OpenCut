@@ -2,7 +2,7 @@
 
 import { ArrayBufferTarget as Mp4Target, Muxer as Mp4Muxer } from "mp4-muxer";
 import { ArrayBufferTarget as WebmTarget, Muxer as WebmMuxer } from "webm-muxer";
-import type { ExportPlan } from "@opencut/export-engine";
+import type { ExportPlan } from "@cutaway/export-engine";
 import type { ResolvedAudioConfig, ResolvedVideoConfig } from "./capabilities";
 
 /**

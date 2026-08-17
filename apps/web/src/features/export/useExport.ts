@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { ExportProgress } from "@opencut/export-engine";
-import { ExportCancelledError } from "@opencut/export-engine";
-import type { ExportSettings } from "@opencut/types";
+import type { ExportProgress } from "@cutaway/export-engine";
+import { ExportCancelledError } from "@cutaway/export-engine";
+import type { ExportSettings } from "@cutaway/types";
 import { useEditorStore } from "@/state/editorStore";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
 import { exportProjectToBlob } from "./exportProject";

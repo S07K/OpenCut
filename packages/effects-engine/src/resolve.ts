@@ -14,8 +14,8 @@ import type {
   EffectInstance,
   EffectParamValue,
   Frame,
-} from "@opencut/types";
-import { evaluate } from "@opencut/animation-engine";
+} from "@cutaway/types";
+import { evaluate } from "@cutaway/animation-engine";
 
 /** An effect flattened for one frame: an id plus concrete parameter values. */
 export interface ResolvedEffect {

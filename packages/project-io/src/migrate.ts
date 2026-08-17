@@ -13,7 +13,7 @@
  * - Never edit an existing migration once released; add a new one.
  */
 
-import { SCHEMA_VERSION } from "@opencut/types";
+import { SCHEMA_VERSION } from "@cutaway/types";
 
 export type RawDocument = Record<string, unknown>;
 

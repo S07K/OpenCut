@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SCHEMA_VERSION, staticValue } from "@opencut/types";
-import { createClip, createProject, createTrack } from "@opencut/utils";
+import { SCHEMA_VERSION, staticValue } from "@cutaway/types";
+import { createClip, createProject, createTrack } from "@cutaway/utils";
 import {
   parseProjectFile,
   projectFileName,
@@ -10,7 +10,7 @@ import {
 } from "../serialize";
 import { validateProject } from "../validate";
 import { migrateDocument } from "../migrate";
-import type { MediaAsset, ProjectDocument } from "@opencut/types";
+import type { MediaAsset, ProjectDocument } from "@cutaway/types";
 
 function imageAsset(id: string): MediaAsset {
   return {
@@ -90,7 +90,7 @@ describe("parseProjectFile", () => {
     if (!result.ok) expect(result.error).toMatch(/valid JSON/i);
   });
 
-  it("rejects a JSON file that is not an OpenCut project", () => {
+  it("rejects a JSON file that is not an Cutaway project", () => {
     const result = parseProjectFile(JSON.stringify({ magic: "something.else" }));
     expect(result.ok).toBe(false);
   });
@@ -250,8 +250,8 @@ describe("projectFileName", () => {
   it("produces a filesystem-safe name", () => {
     // Disallowed characters are stripped, then whitespace runs collapse to a
     // single dash — so "/ " does not leave a double dash behind.
-    expect(projectFileName("My Video / 2026!")).toBe("My-Video-2026.opencut");
-    expect(projectFileName("   ")).toBe("untitled.opencut");
+    expect(projectFileName("My Video / 2026!")).toBe("My-Video-2026.cutaway");
+    expect(projectFileName("   ")).toBe("untitled.cutaway");
   });
 });
 

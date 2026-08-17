@@ -1,4 +1,4 @@
-import type { CaptionTrackData } from "@opencut/types";
+import type { CaptionTrackData } from "@cutaway/types";
 
 /** The store's caption-track updater, threaded to the editor components. */
 export type EditorUpdateCaptionTrack = (

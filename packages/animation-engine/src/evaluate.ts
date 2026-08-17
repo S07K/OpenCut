@@ -7,7 +7,7 @@
  * a scan once a track has keyframes.
  */
 
-import type { Animatable, Frame, Keyframe } from "@opencut/types";
+import type { Animatable, Frame, Keyframe } from "@cutaway/types";
 import { applyEasing } from "./easing";
 import { interpolate } from "./interpolate";
 

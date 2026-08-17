@@ -1,5 +1,5 @@
-import type { Clip, Vec2 } from "@opencut/types";
-import { evaluate, setKeyframe } from "@opencut/animation-engine";
+import type { Clip, Vec2 } from "@cutaway/types";
+import { evaluate, setKeyframe } from "@cutaway/animation-engine";
 import { propertiesForClip, type PropertyDescriptor } from "@/features/properties/propertySchema";
 import type { AnimationPreset, PresetValue } from "./presets";
 

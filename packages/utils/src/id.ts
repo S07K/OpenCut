@@ -1,4 +1,4 @@
-import type { Id } from "@opencut/types";
+import type { Id } from "@cutaway/types";
 
 /**
  * Generates a unique id.

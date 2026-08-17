@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { Download, FolderOpen, Import, Redo2, Save, Search, Settings, Undo2 } from "lucide-react";
-import { Button, IconButton } from "@opencut/ui";
-import { ASPECT_RATIOS, resolutionForAspect } from "@opencut/utils";
+import { Button, IconButton } from "@cutaway/ui";
+import { ASPECT_RATIOS, resolutionForAspect } from "@cutaway/utils";
 import { useEditorStore } from "@/state/editorStore";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
 import { useProject } from "@/features/project/ProjectProvider";
@@ -31,9 +31,9 @@ export function TopToolbar() {
     <header className="border-border-subtle bg-surface-panel flex h-(--size-toolbar-height) shrink-0 items-center gap-1 border-b px-3">
       <div className="flex items-center gap-2 pr-2">
         <div className="bg-accent text-accent-text grid h-6 w-6 place-items-center rounded-sm text-xs font-bold">
-          O
+          C
         </div>
-        <span className="text-text-primary text-sm font-semibold">OpenCut</span>
+        <span className="text-text-primary text-sm font-semibold">Cutaway</span>
       </div>
 
       <div className="bg-border-subtle mx-1 h-5 w-px" />
@@ -110,7 +110,7 @@ export function TopToolbar() {
       <input
         ref={projectInputRef}
         type="file"
-        accept=".opencut,application/json"
+        accept=".cutaway,application/json"
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];

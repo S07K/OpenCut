@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { ChevronsLeft, ChevronsRight, Pause, Play, SkipBack, SkipForward } from "lucide-react";
-import { IconButton } from "@opencut/ui";
-import { formatTimecode } from "@opencut/timeline-engine";
+import { IconButton } from "@cutaway/ui";
+import { formatTimecode } from "@cutaway/timeline-engine";
 import { useEditorStore } from "@/state/editorStore";
 import { PreviewStage } from "@/features/preview/PreviewStage";
 import { MaskOverlay } from "@/features/masks/MaskOverlay";

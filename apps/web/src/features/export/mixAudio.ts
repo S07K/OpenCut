@@ -1,9 +1,9 @@
 "use client";
 
-import type { ExportPlan } from "@opencut/export-engine";
-import { resolveAudioTimeline, type ResolvedAudioClip } from "@opencut/render-engine";
-import type { MediaBlobStore } from "@opencut/media-engine";
-import type { ProjectDocument } from "@opencut/types";
+import type { ExportPlan } from "@cutaway/export-engine";
+import { resolveAudioTimeline, type ResolvedAudioClip } from "@cutaway/render-engine";
+import type { MediaBlobStore } from "@cutaway/media-engine";
+import type { ProjectDocument } from "@cutaway/types";
 
 /**
  * Mixes the project's audio clips into a single buffer for the export range.

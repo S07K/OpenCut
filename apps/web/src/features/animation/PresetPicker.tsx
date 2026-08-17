@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { Sparkles } from "lucide-react";
-import type { Clip } from "@opencut/types";
-import { cn } from "@opencut/ui";
+import type { Clip } from "@cutaway/types";
+import { cn } from "@cutaway/ui";
 import { useEditorStore } from "@/state/editorStore";
 import { ANIMATION_PRESETS } from "./presets";
 import { applicablePresets, applyPreset } from "./applyPreset";

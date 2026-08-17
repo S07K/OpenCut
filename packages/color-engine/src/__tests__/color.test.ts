@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { staticValue } from "@opencut/types";
-import type { ColorGrade } from "@opencut/types";
+import { staticValue } from "@cutaway/types";
+import type { ColorGrade } from "@cutaway/types";
 import { isNeutralGrade, resolveGrade } from "../evaluate";
 import { COLOR_GRADE_PRESETS, getColorGradePreset } from "../presets";
 

@@ -1,4 +1,4 @@
-import type { CaptionBlock, CaptionTrackData, Clip, Frame, Id, Track } from "@opencut/types";
+import type { CaptionBlock, CaptionTrackData, Clip, Frame, Id, Track } from "@cutaway/types";
 
 /**
  * Timeline coordinate math.

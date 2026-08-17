@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ExportSettings, ProjectDocument } from "@opencut/types";
+import type { ExportSettings, ProjectDocument } from "@cutaway/types";
 import {
   ExportPlanError,
   describeExport,

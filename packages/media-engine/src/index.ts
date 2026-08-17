@@ -1,5 +1,5 @@
 /**
- * `@opencut/media-engine` — the adapters layer for media.
+ * `@cutaway/media-engine` — the adapters layer for media.
  *
  * Unlike the pure engines, this package *does* touch browser APIs: IndexedDB,
  * `<video>`, canvas, and Web Audio. Each of those sits behind an interface or a

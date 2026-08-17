@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AnimatedValue, Keyframe } from "@opencut/types";
-import { staticValue } from "@opencut/types";
+import type { AnimatedValue, Keyframe } from "@cutaway/types";
+import { staticValue } from "@cutaway/types";
 import { applyEasing, cubicBezier, easeIn, easeInOut, easeOut, spring } from "../easing";
 import { formatHexColor, interpolate, lerp, lerpColor, parseHexColor } from "../interpolate";
 import { evaluate, findKeyframeIndex } from "../evaluate";

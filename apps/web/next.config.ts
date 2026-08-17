@@ -7,19 +7,19 @@ const nextConfig: NextConfig = {
    * Next must therefore compile them itself.
    */
   transpilePackages: [
-    "@opencut/types",
-    "@opencut/utils",
-    "@opencut/timeline-engine",
-    "@opencut/media-engine",
-    "@opencut/animation-engine",
-    "@opencut/render-engine",
-    "@opencut/project-io",
-    "@opencut/playback-engine",
-    "@opencut/history-engine",
-    "@opencut/mask-engine",
-    "@opencut/caption-engine",
-    "@opencut/color-engine",
-    "@opencut/ui",
+    "@cutaway/types",
+    "@cutaway/utils",
+    "@cutaway/timeline-engine",
+    "@cutaway/media-engine",
+    "@cutaway/animation-engine",
+    "@cutaway/render-engine",
+    "@cutaway/project-io",
+    "@cutaway/playback-engine",
+    "@cutaway/history-engine",
+    "@cutaway/mask-engine",
+    "@cutaway/caption-engine",
+    "@cutaway/color-engine",
+    "@cutaway/ui",
   ],
 };
 

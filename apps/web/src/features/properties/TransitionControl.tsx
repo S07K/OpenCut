@@ -1,7 +1,7 @@
 "use client";
 
-import type { Clip, TransitionKind } from "@opencut/types";
-import { cn } from "@opencut/ui";
+import type { Clip, TransitionKind } from "@cutaway/types";
+import { cn } from "@cutaway/ui";
 import { useEditorStore } from "@/state/editorStore";
 import { NumberField } from "./NumberField";
 

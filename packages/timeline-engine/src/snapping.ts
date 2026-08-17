@@ -7,7 +7,7 @@
  * every zoom level, which is the whole point of the feature.
  */
 
-import type { Clip, Frame, Id, Marker } from "@opencut/types";
+import type { Clip, Frame, Id, Marker } from "@cutaway/types";
 
 export type SnapKind = "clip-start" | "clip-end" | "playhead" | "marker" | "timeline-start";
 

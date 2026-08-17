@@ -1,5 +1,5 @@
 /**
- * `@opencut/effects-engine` — the open-world effect registry and resolution.
+ * `@cutaway/effects-engine` — the open-world effect registry and resolution.
  *
  * Pure and DOM-free. It answers *which* effects exist and *what* their
  * parameters are at a frame; the compositor answers *how* each id draws, keyed

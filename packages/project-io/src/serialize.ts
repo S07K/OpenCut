@@ -1,5 +1,5 @@
 /**
- * Reading and writing `.opencut` project files.
+ * Reading and writing `.cutaway` project files.
  *
  * The file *is* the project document plus a small envelope. No proprietary
  * container, no binary blob: a creator can open it in a text editor, diff it in
@@ -7,15 +7,15 @@
  * open-source tool, not an implementation detail.
  */
 
-import type { ProjectDocument } from "@opencut/types";
+import type { ProjectDocument } from "@cutaway/types";
 import { migrateDocument, type RawDocument } from "./migrate";
 import { validateProject, type ValidationIssue } from "./validate";
 
-export const PROJECT_FILE_EXTENSION = "opencut";
+export const PROJECT_FILE_EXTENSION = "cutaway";
 export const PROJECT_FILE_MIME = "application/json";
 
 /** Marks the file as ours, so a wrong file is rejected with a clear message. */
-export const PROJECT_FILE_MAGIC = "opencut.project";
+export const PROJECT_FILE_MAGIC = "cutaway.project";
 
 export interface ProjectFile {
   magic: string;
@@ -61,7 +61,7 @@ export type ParseResult =
  * Parses a project file.
  *
  * Only two things are hard failures: unparseable JSON, and a file that is not
- * an OpenCut project. Everything else is repaired by `validateProject` and
+ * an Cutaway project. Everything else is repaired by `validateProject` and
  * reported through `issues` — losing a corrupt clip beats losing the project.
  */
 export function parseProjectFile(contents: string): ParseResult {
@@ -74,7 +74,7 @@ export function parseProjectFile(contents: string): ParseResult {
   }
 
   if (typeof parsed !== "object" || parsed === null) {
-    return { ok: false, error: "File is not an OpenCut project." };
+    return { ok: false, error: "File is not an Cutaway project." };
   }
 
   const envelope = parsed as Partial<ProjectFile> & RawDocument;
@@ -84,7 +84,7 @@ export function parseProjectFile(contents: string): ParseResult {
   const rawProject: unknown = envelope.magic === PROJECT_FILE_MAGIC ? envelope.project : parsed;
 
   if (envelope.magic !== undefined && envelope.magic !== PROJECT_FILE_MAGIC) {
-    return { ok: false, error: "File is not an OpenCut project." };
+    return { ok: false, error: "File is not an Cutaway project." };
   }
 
   if (typeof rawProject !== "object" || rawProject === null) {

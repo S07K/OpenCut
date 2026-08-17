@@ -1,5 +1,5 @@
-import type { Frame, Id, Marker } from "@opencut/types";
-import { formatTimecode } from "@opencut/timeline-engine";
+import type { Frame, Id, Marker } from "@cutaway/types";
+import { formatTimecode } from "@cutaway/timeline-engine";
 import {
   chooseTickInterval,
   frameToX,

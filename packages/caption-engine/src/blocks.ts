@@ -10,7 +10,7 @@
  * Pure and DOM-free; every function returns new data and never mutates.
  */
 
-import type { CaptionBlock, CaptionWord, Frame, Id } from "@opencut/types";
+import type { CaptionBlock, CaptionWord, Frame, Id } from "@cutaway/types";
 
 /** A block's span is derived from its words, so it can never disagree with them. */
 export function blockSpan(words: readonly CaptionWord[]): { startFrame: Frame; endFrame: Frame } {

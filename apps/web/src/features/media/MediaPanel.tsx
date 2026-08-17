@@ -10,9 +10,9 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import type { MediaAsset } from "@opencut/types";
-import { formatByteSize, type MediaBlobStore } from "@opencut/media-engine";
-import { Button, IconButton, cn } from "@opencut/ui";
+import type { MediaAsset } from "@cutaway/types";
+import { formatByteSize, type MediaBlobStore } from "@cutaway/media-engine";
+import { Button, IconButton, cn } from "@cutaway/ui";
 import { useShallow } from "zustand/react/shallow";
 import { useMediaImportContext } from "./MediaImportProvider";
 import { useBlobUrl } from "./useBlobUrl";
