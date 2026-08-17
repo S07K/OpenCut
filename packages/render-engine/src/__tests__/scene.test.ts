@@ -4,7 +4,7 @@ import { staticValue } from "@opencut/types";
 import { createClip, createProject, createTrack } from "@opencut/utils";
 import { createEllipseMask } from "@opencut/mask-engine";
 import { createColorGrade } from "@opencut/utils";
-import { resolveScene, sourceTimeFor } from "../scene";
+import { resolveScene, sourceTimeFor, transitionOpacity } from "../scene";
 
 function videoContent(mediaId = "m1", speed = 1, sourceInFrame = 0) {
   return {
@@ -408,5 +408,87 @@ describe("sourceTimeFor", () => {
   it("consumes source faster at higher speed", () => {
     // At 2x, 30 timeline frames consume 60 source frames → 2 seconds.
     expect(sourceTimeFor(clip, 130, 0, 2, 30)).toBeCloseTo(2);
+  });
+});
+
+describe("transitionOpacity", () => {
+  const clip = (
+    id: string,
+    startFrame: number,
+    durationFrames: number,
+    transitionIn: Clip["transitionIn"] = null,
+  ): Clip => ({
+    ...createClip({ id, trackId: "t", startFrame, durationFrames, content: videoContent() }),
+    transitionIn,
+  });
+  const cross = (durationFrames: number) => ({ kind: "crossfade" as const, durationFrames });
+  const dip = (durationFrames: number) => ({ kind: "dip" as const, durationFrames });
+
+  it("is 1 for a plain clip in its window and null outside", () => {
+    const c = clip("a", 100, 50);
+    expect(transitionOpacity(c, undefined, 120)).toBe(1);
+    expect(transitionOpacity(c, undefined, 99)).toBeNull();
+    expect(transitionOpacity(c, undefined, 150)).toBeNull();
+  });
+
+  it("fades the incoming clip in over the crossfade window", () => {
+    const c = clip("b", 100, 50, cross(10));
+    expect(transitionOpacity(c, undefined, 100)).toBe(0);
+    expect(transitionOpacity(c, undefined, 105)).toBeCloseTo(0.5);
+    expect(transitionOpacity(c, undefined, 110)).toBe(1); // past the fade
+  });
+
+  it("renders the outgoing clip's tail past its end, fading out", () => {
+    const outgoing = clip("out", 50, 50); // ends at 100
+    const incoming = clip("in", 100, 50, cross(10)); // adjacent cut at 100
+    expect(transitionOpacity(outgoing, incoming, 100)).toBe(1);
+    expect(transitionOpacity(outgoing, incoming, 105)).toBeCloseTo(0.5);
+    expect(transitionOpacity(outgoing, incoming, 110)).toBeNull(); // tail over
+  });
+
+  it("only crossfades an exact cut, not a gap", () => {
+    const outgoing = clip("out", 50, 50); // ends at 100
+    const incoming = clip("in", 120, 50, cross(10)); // gap: starts at 120
+    expect(transitionOpacity(outgoing, incoming, 105)).toBeNull();
+  });
+
+  it("routes a dip through black on both sides", () => {
+    const outgoing = clip("out", 50, 50);
+    const incoming = clip("in", 100, 50, dip(10));
+    // Outgoing: full → black over the first half.
+    expect(transitionOpacity(outgoing, incoming, 100)).toBe(1);
+    expect(transitionOpacity(outgoing, incoming, 105)).toBe(0);
+    // Incoming: black → full over the second half.
+    expect(transitionOpacity(incoming, undefined, 105)).toBe(0);
+    expect(transitionOpacity(incoming, undefined, 110)).toBe(1);
+  });
+});
+
+describe("resolveScene — transitions", () => {
+  it("shows both clips crossfading during the overlap", () => {
+    const track = createTrack({ id: "vt", kind: "video", index: 0 });
+    const outgoing = createClip({
+      id: "out",
+      trackId: track.id,
+      startFrame: 0,
+      durationFrames: 100,
+      content: videoContent("mA"),
+    });
+    const incoming = {
+      ...createClip({
+        id: "in",
+        trackId: track.id,
+        startFrame: 100,
+        durationFrames: 100,
+        content: videoContent("mB"),
+      }),
+      transitionIn: { kind: "crossfade" as const, durationFrames: 20 },
+    };
+
+    // Halfway through the crossfade (frame 110): both visible near 0.5 opacity.
+    const scene = resolveScene(projectWith([track], [outgoing, incoming]), 110);
+    const byId = Object.fromEntries(scene.nodes.map((n) => [n.clipId, n.appearance.opacity]));
+    expect(byId.out).toBeCloseTo(0.5);
+    expect(byId.in).toBeCloseTo(0.5);
   });
 });

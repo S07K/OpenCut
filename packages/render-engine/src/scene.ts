@@ -171,6 +171,50 @@ function isClipActive(clip: Clip, frame: Frame): boolean {
   return frame >= clip.startFrame && frame < clip.startFrame + clip.durationFrames;
 }
 
+/**
+ * The opacity multiplier for a clip at `frame` under the transition model, or
+ * null when the clip is not visible at all.
+ *
+ * Two overlap cases, both driven by the *incoming* clip's `transitionIn`:
+ * - This clip is the incoming side: it fades in over its first D frames.
+ * - This clip is the outgoing side: the next clip's transition renders it past
+ *   its own end (a tail) while it fades out, so the two overlap across the cut.
+ *
+ * `crossfade` fades the two linearly into each other; `dip` routes both through
+ * black — the outgoing to black over the first half, the incoming up over the
+ * second — so nothing double-exposes.
+ */
+export function transitionOpacity(clip: Clip, next: Clip | undefined, frame: Frame): number | null {
+  const start = clip.startFrame;
+  const end = clip.startFrame + clip.durationFrames;
+
+  // Normal visibility, with an incoming fade at the head.
+  if (frame >= start && frame < end) {
+    const transition = clip.transitionIn;
+    if (transition && transition.durationFrames > 0 && frame < start + transition.durationFrames) {
+      const t = (frame - start) / transition.durationFrames;
+      return transition.kind === "dip" ? Math.max(0, t * 2 - 1) : t;
+    }
+    return 1;
+  }
+
+  // Outgoing tail: the next clip's transition pulls this one past its end.
+  const nextTransition = next?.transitionIn;
+  if (
+    next &&
+    nextTransition &&
+    nextTransition.durationFrames > 0 &&
+    next.startFrame === end && // only an exact cut crossfades
+    frame >= end &&
+    frame < end + nextTransition.durationFrames
+  ) {
+    const t = (frame - end) / nextTransition.durationFrames;
+    return nextTransition.kind === "dip" ? Math.max(0, 1 - t * 2) : 1 - t;
+  }
+
+  return null;
+}
+
 function resolveTransform(clip: Clip, frame: Frame): ResolvedTransform {
   const { transform } = clip;
   return {
@@ -327,14 +371,17 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
     const track = entities.tracks[trackId];
     if (!track) return;
 
-    const clips = Object.values(entities.clips).filter(
-      (clip) => clip.trackId === trackId && isClipActive(clip, frame),
-    );
+    // Sorted so each clip can see the one after it: a transition belongs to the
+    // incoming clip and pulls the previous clip's tail forward across the cut.
+    const trackClips = Object.values(entities.clips)
+      .filter((clip) => clip.trackId === trackId)
+      .sort((a, b) => a.startFrame - b.startFrame);
 
-    for (const clip of clips) {
+    trackClips.forEach((clip, index) => {
       if (clip.content.kind === "audio") {
+        if (!isClipActive(clip, frame)) return;
         const audible = hasSoloedAudio ? track.solo : !track.muted;
-        if (!audible || clip.hidden) continue;
+        if (!audible || clip.hidden) return;
 
         audio.push({
           clipId: clip.id,
@@ -349,13 +396,20 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
           volume: evaluate(clip.content.volume, frame) * track.volume,
           muted: clip.content.muted,
         });
-        continue;
+        return;
       }
 
-      if (track.hidden || clip.hidden) continue;
+      if (track.hidden || clip.hidden) return;
+
+      // Visibility and opacity both come from the transition model: a clip may
+      // draw past its end (an outgoing tail) or start faded (an incoming fade).
+      const factor = transitionOpacity(clip, trackClips[index + 1], frame);
+      if (factor === null) return;
 
       const content = resolveContent(clip, frame, frameRate);
-      if (!content) continue;
+      if (!content) return;
+
+      const appearance = resolveAppearance(clip, frame);
 
       nodes.push({
         clipId: clip.id,
@@ -367,13 +421,14 @@ export function resolveScene(project: ProjectDocument, frame: Frame): Scene {
         // standard NLE convention (top layer wins), so z decreases with index.
         zIndex: (trackOrder.length - trackIndex) * 1_000_000 + clip.startFrame,
         transform: resolveTransform(clip, frame),
-        appearance: resolveAppearance(clip, frame),
+        appearance:
+          factor === 1 ? appearance : { ...appearance, opacity: appearance.opacity * factor },
         content,
         masks: resolveMasks(clip.masks, frame),
         grade: resolveClipGrade(clip, frame),
         effects: resolveEffects(clip.effects, frame),
       });
-    }
+    });
   });
 
   nodes.sort((a, b) => a.zIndex - b.zIndex);

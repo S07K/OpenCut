@@ -6,6 +6,7 @@ import { useEditorStore } from "@/state/editorStore";
 import { groupedProperties } from "./propertySchema";
 import { PropertyRow } from "./PropertyRow";
 import { useClipProperties } from "./useClipProperties";
+import { TransitionControl } from "./TransitionControl";
 import { PresetPicker } from "@/features/animation/PresetPicker";
 
 /**
@@ -40,6 +41,8 @@ export function PropertiesPanel() {
       <ClipHeader clip={clip} playheadFrame={playhead} />
 
       <PresetPicker clip={clip} />
+
+      {clip.content.kind !== "audio" && <TransitionControl clip={clip} />}
 
       {groupedProperties(clip).map(([group, descriptors]) => (
         <section key={group}>

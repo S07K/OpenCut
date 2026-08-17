@@ -43,6 +43,7 @@ export function makeClip(overrides: Partial<Clip> = {}): Clip {
     masks: [],
     effects: [],
     grade: null,
+    transitionIn: null,
     locked: false,
     hidden: false,
     groupId: null,

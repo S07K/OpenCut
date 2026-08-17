@@ -126,6 +126,7 @@ export function createClip(options: CreateClipOptions): Clip {
     // Null rather than a neutral grade: a grade object per clip would bloat
     // every project file with values that mean "do nothing".
     grade: null,
+    transitionIn: null,
     locked: false,
     hidden: false,
     groupId: null,

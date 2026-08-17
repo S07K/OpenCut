@@ -172,6 +172,21 @@ export type ClipKind = ClipContent["kind"];
 // Clip
 // ---------------------------------------------------------------------------
 
+/** How this clip enters from what precedes it on the same track. */
+export type TransitionKind = "crossfade" | "dip";
+
+/**
+ * A transition into a clip from the previous clip on its track.
+ *
+ * Attached to the *incoming* clip, so a cut owns exactly one transition and the
+ * two sides can never disagree. `crossfade` overlaps the outgoing clip's tail
+ * with this clip's head; `dip` fades the cut through black.
+ */
+export interface ClipTransition {
+  kind: TransitionKind;
+  durationFrames: FrameDuration;
+}
+
 export interface Clip {
   id: Id;
   name: string;
@@ -188,6 +203,8 @@ export interface Clip {
   masks: Mask[];
   effects: EffectInstance[];
   grade: ColorGrade | null;
+  /** Transition from the previous clip on the track into this one, or null. */
+  transitionIn: ClipTransition | null;
 
   locked: boolean;
   hidden: boolean;
