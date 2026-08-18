@@ -13,6 +13,7 @@ import type { EffectDefinition } from "@cutaway/types";
 
 export const EFFECT_BLUR = "core.blur.gaussian";
 export const EFFECT_NOISE = "core.stylize.noise";
+export const EFFECT_CHROMA = "core.key.chroma";
 
 export const BUILTIN_EFFECTS: EffectDefinition[] = [
   {
@@ -41,6 +42,32 @@ export const BUILTIN_EFFECTS: EffectDefinition[] = [
         label: "Amount",
         type: "range",
         defaultValue: 0.3,
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+    ],
+  },
+  {
+    effectId: EFFECT_CHROMA,
+    name: "Chroma Key",
+    category: "Keying",
+    params: [
+      { key: "color", label: "Key color", type: "color", defaultValue: "#00ff00" },
+      {
+        key: "similarity",
+        label: "Similarity",
+        type: "range",
+        defaultValue: 0.4,
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+      {
+        key: "smoothness",
+        label: "Smoothness",
+        type: "range",
+        defaultValue: 0.1,
         min: 0,
         max: 1,
         step: 0.01,

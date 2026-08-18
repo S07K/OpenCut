@@ -137,6 +137,23 @@ export function EffectsPanel() {
                   const animatable = effect.params[schema.key];
                   if (!animatable) return null;
                   const value = evaluate(animatable, playhead);
+
+                  if (schema.type === "color" && typeof value === "string") {
+                    return (
+                      <div key={schema.key} className="flex items-center gap-1.5 py-0.5">
+                        <span className="text-2xs text-text-secondary w-20 shrink-0">
+                          {schema.label}
+                        </span>
+                        <input
+                          type="color"
+                          value={value}
+                          onChange={(e) => setParam(effect.id, schema.key, e.target.value)}
+                          className="border-border-default h-6 w-10 cursor-pointer rounded-xs border bg-transparent"
+                        />
+                      </div>
+                    );
+                  }
+
                   if (typeof value !== "number") return null;
                   return (
                     <div key={schema.key} className="flex items-center gap-1.5 py-0.5">

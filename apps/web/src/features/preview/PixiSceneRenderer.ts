@@ -14,7 +14,8 @@ import {
 } from "pixi.js";
 import type { Scene, SceneNode } from "@cutaway/render-engine";
 import type { ResolvedEffect } from "@cutaway/effects-engine";
-import { EFFECT_BLUR, EFFECT_NOISE } from "@cutaway/effects-engine";
+import { EFFECT_BLUR, EFFECT_CHROMA, EFFECT_NOISE } from "@cutaway/effects-engine";
+import { ChromaKeyFilter } from "./ChromaKeyFilter";
 import type { ResolvedMask } from "@cutaway/mask-engine";
 import type { Id, MediaAsset } from "@cutaway/types";
 import { MediaTextureCache } from "./MediaTextureCache";
@@ -307,6 +308,8 @@ export class PixiSceneRenderer {
         return new BlurFilter();
       case EFFECT_NOISE:
         return new NoiseFilter();
+      case EFFECT_CHROMA:
+        return new ChromaKeyFilter();
       default:
         return null;
     }
@@ -318,6 +321,10 @@ export class PixiSceneRenderer {
       filter.strength = Number(effect.params.strength ?? 0) * 40;
     } else if (filter instanceof NoiseFilter) {
       filter.noise = Number(effect.params.amount ?? 0);
+    } else if (filter instanceof ChromaKeyFilter) {
+      filter.keyColor = hexToRgb(String(effect.params.color ?? "#00ff00"));
+      filter.similarity = Number(effect.params.similarity ?? 0.4);
+      filter.smoothness = Number(effect.params.smoothness ?? 0.1);
     }
   }
 
@@ -659,4 +666,10 @@ function flattenPolygon(polygon: readonly { x: number; y: number }[]): number[] 
   const flat: number[] = [];
   for (const point of polygon) flat.push(point.x, point.y);
   return flat;
+}
+
+/** Parses a `#rrggbb` hex colour to normalised 0..1 RGB for a shader uniform. */
+function hexToRgb(hex: string): [number, number, number] {
+  const value = parseInt(hex.replace("#", ""), 16);
+  return [((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255];
 }

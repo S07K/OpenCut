@@ -59,6 +59,13 @@ describe("shared registry", () => {
   it("comes pre-seeded with the built-in effects", () => {
     expect(effectRegistry.get(EFFECT_BLUR)).toBeDefined();
   });
+
+  it("registers chroma key with a colour parameter", () => {
+    const chroma = effectRegistry.get("core.key.chroma");
+    expect(chroma).toBeDefined();
+    expect(chroma?.params.find((p) => p.key === "color")?.type).toBe("color");
+    expect(defaultEffectParams(chroma!).color).toEqual({ type: "static", value: "#00ff00" });
+  });
 });
 
 describe("defaultEffectParams", () => {
