@@ -14,7 +14,15 @@ import {
 } from "pixi.js";
 import type { Scene, SceneNode } from "@cutaway/render-engine";
 import type { ResolvedEffect } from "@cutaway/effects-engine";
-import { EFFECT_BLUR, EFFECT_CHROMA, EFFECT_NOISE } from "@cutaway/effects-engine";
+import {
+  EFFECT_BLUR,
+  EFFECT_CHROMA,
+  EFFECT_GRAYSCALE,
+  EFFECT_HUE,
+  EFFECT_INVERT,
+  EFFECT_NOISE,
+  EFFECT_SEPIA,
+} from "@cutaway/effects-engine";
 import { ChromaKeyFilter } from "./ChromaKeyFilter";
 import type { ResolvedMask } from "@cutaway/mask-engine";
 import type { Id, MediaAsset } from "@cutaway/types";
@@ -310,6 +318,13 @@ export class PixiSceneRenderer {
         return new NoiseFilter();
       case EFFECT_CHROMA:
         return new ChromaKeyFilter();
+      // Sepia, grayscale, invert, and hue are all one colour matrix; the update
+      // step composes the right one from the effect id.
+      case EFFECT_SEPIA:
+      case EFFECT_GRAYSCALE:
+      case EFFECT_INVERT:
+      case EFFECT_HUE:
+        return new ColorMatrixFilter();
       default:
         return null;
     }
@@ -325,6 +340,29 @@ export class PixiSceneRenderer {
       filter.keyColor = hexToRgb(String(effect.params.color ?? "#00ff00"));
       filter.similarity = Number(effect.params.similarity ?? 0.4);
       filter.smoothness = Number(effect.params.smoothness ?? 0.1);
+    } else if (filter instanceof ColorMatrixFilter) {
+      // Rebuild from identity each frame so the matrix is absolute; `alpha`
+      // blends the effect with the original, driving the Amount slider.
+      filter.reset();
+      const amount = Number(effect.params.amount ?? 1);
+      switch (effect.effectId) {
+        case EFFECT_SEPIA:
+          filter.sepia(true);
+          filter.alpha = amount;
+          break;
+        case EFFECT_GRAYSCALE:
+          filter.desaturate();
+          filter.alpha = amount;
+          break;
+        case EFFECT_INVERT:
+          filter.negative(true);
+          filter.alpha = amount;
+          break;
+        case EFFECT_HUE:
+          filter.hue(Number(effect.params.degrees ?? 0), true);
+          filter.alpha = 1;
+          break;
+      }
     }
   }
 

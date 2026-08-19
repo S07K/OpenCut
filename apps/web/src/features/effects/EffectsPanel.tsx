@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, EyeOff, Trash2 } from "lucide-react";
 import type { Clip, EffectDefinition, EffectInstance, EffectParamValue } from "@cutaway/types";
 import { staticValue } from "@cutaway/types";
 import { evaluate } from "@cutaway/animation-engine";
@@ -56,6 +56,18 @@ export function EffectsPanel() {
   const removeEffect = (id: string) =>
     patchEffects((effects) => effects.filter((e) => e.id !== id), "Remove effect");
 
+  // Effects apply top-to-bottom, so order matters (blur-then-grayscale differs
+  // from grayscale-then-blur). Let the user reorder the stack.
+  const moveEffect = (id: string, direction: -1 | 1) =>
+    patchEffects((effects) => {
+      const from = effects.findIndex((e) => e.id === id);
+      const to = from + direction;
+      if (from < 0 || to < 0 || to >= effects.length) return effects;
+      const next = [...effects];
+      [next[from], next[to]] = [next[to]!, next[from]!];
+      return next;
+    }, "Reorder effect");
+
   const toggleEffect = (id: string) =>
     patchEffects(
       (effects) => effects.map((e) => (e.id === id ? { ...e, enabled: !e.enabled } : e)),
@@ -74,31 +86,36 @@ export function EffectsPanel() {
 
   return (
     <div className="flex flex-col gap-3 p-3">
-      <section>
-        <h3 className="text-2xs text-text-tertiary mb-1 font-medium tracking-wide uppercase">
+      <section className="flex flex-col gap-2">
+        <h3 className="text-2xs text-text-tertiary font-medium tracking-wide uppercase">
           Add effect
         </h3>
-        <div className="flex flex-wrap gap-1">
-          {effectRegistry.list().map((definition) => (
-            <button
-              key={definition.effectId}
-              onClick={() => addEffect(definition)}
-              className={cn(
-                "border-border-default bg-surface-raised text-2xs text-text-secondary rounded-sm border px-2 py-1",
-                "duration-fast hover:border-accent hover:text-text-primary transition-colors",
-              )}
-            >
-              {definition.name}
-            </button>
-          ))}
-        </div>
+        {[...effectRegistry.byCategory()].map(([category, definitions]) => (
+          <div key={category}>
+            <p className="text-2xs text-text-tertiary/70 mb-0.5">{category}</p>
+            <div className="flex flex-wrap gap-1">
+              {definitions.map((definition) => (
+                <button
+                  key={definition.effectId}
+                  onClick={() => addEffect(definition)}
+                  className={cn(
+                    "border-border-default bg-surface-raised text-2xs text-text-secondary rounded-sm border px-2 py-1",
+                    "duration-fast hover:border-accent hover:text-text-primary transition-colors",
+                  )}
+                >
+                  {definition.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
 
       {clip.effects.length === 0 ? (
         <p className="text-text-tertiary text-2xs">No effects. Add one above.</p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {clip.effects.map((effect) => {
+          {clip.effects.map((effect, index) => {
             const definition = effectRegistry.get(effect.effectId);
             return (
               <li
@@ -114,6 +131,22 @@ export function EffectsPanel() {
                   >
                     {definition?.name ?? effect.effectId}
                   </span>
+                  <IconButton
+                    size="sm"
+                    label="Move effect up"
+                    disabled={index === 0}
+                    onClick={() => moveEffect(effect.id, -1)}
+                  >
+                    <ChevronUp size={12} />
+                  </IconButton>
+                  <IconButton
+                    size="sm"
+                    label="Move effect down"
+                    disabled={index === clip.effects.length - 1}
+                    onClick={() => moveEffect(effect.id, 1)}
+                  >
+                    <ChevronDown size={12} />
+                  </IconButton>
                   <IconButton
                     size="sm"
                     label={effect.enabled ? "Disable effect" : "Enable effect"}

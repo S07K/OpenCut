@@ -66,6 +66,16 @@ describe("shared registry", () => {
     expect(chroma?.params.find((p) => p.key === "color")?.type).toBe("color");
     expect(defaultEffectParams(chroma!).color).toEqual({ type: "static", value: "#00ff00" });
   });
+
+  it("groups the colour effects under one category", () => {
+    const color = effectRegistry.byCategory().get("Color");
+    expect(color?.map((d) => d.effectId)).toEqual([
+      "core.color.sepia",
+      "core.color.grayscale",
+      "core.color.invert",
+      "core.color.hue",
+    ]);
+  });
 });
 
 describe("defaultEffectParams", () => {

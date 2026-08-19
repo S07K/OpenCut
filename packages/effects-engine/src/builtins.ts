@@ -14,6 +14,21 @@ import type { EffectDefinition } from "@cutaway/types";
 export const EFFECT_BLUR = "core.blur.gaussian";
 export const EFFECT_NOISE = "core.stylize.noise";
 export const EFFECT_CHROMA = "core.key.chroma";
+export const EFFECT_SEPIA = "core.color.sepia";
+export const EFFECT_GRAYSCALE = "core.color.grayscale";
+export const EFFECT_INVERT = "core.color.invert";
+export const EFFECT_HUE = "core.color.hue";
+
+/** An "amount" range param (0..1), shared by the blend-strength colour effects. */
+const amountParam = {
+  key: "amount",
+  label: "Amount",
+  type: "range" as const,
+  defaultValue: 1,
+  min: 0,
+  max: 1,
+  step: 0.01,
+};
 
 export const BUILTIN_EFFECTS: EffectDefinition[] = [
   {
@@ -71,6 +86,25 @@ export const BUILTIN_EFFECTS: EffectDefinition[] = [
         min: 0,
         max: 1,
         step: 0.01,
+      },
+    ],
+  },
+  { effectId: EFFECT_SEPIA, name: "Sepia", category: "Color", params: [amountParam] },
+  { effectId: EFFECT_GRAYSCALE, name: "Grayscale", category: "Color", params: [amountParam] },
+  { effectId: EFFECT_INVERT, name: "Invert", category: "Color", params: [amountParam] },
+  {
+    effectId: EFFECT_HUE,
+    name: "Hue Rotate",
+    category: "Color",
+    params: [
+      {
+        key: "degrees",
+        label: "Degrees",
+        type: "range",
+        defaultValue: 0,
+        min: -180,
+        max: 180,
+        step: 1,
       },
     ],
   },
