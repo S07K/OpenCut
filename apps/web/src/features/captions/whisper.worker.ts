@@ -155,7 +155,6 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
     post({ type: "result", id, chunks });
   } catch (error) {
     // Log the full error for debugging, but hand the UI only the message.
-    // eslint-disable-next-line no-console
     console.error("[whisper.worker]", error);
     post({ type: "error", id, message: error instanceof Error ? error.message : String(error) });
   }

@@ -9,3 +9,4 @@
 
 export * from "./scene";
 export * from "./audio";
+export * from "./decodeSchedule";

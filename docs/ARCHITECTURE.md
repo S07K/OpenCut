@@ -217,9 +217,17 @@ preview frame for frame.
   container. A `NodeBackend` and an FFmpeg.wasm fallback are possible future
   backends behind the same `VideoWriter` seam, but are not built — WebCodecs
   coverage in modern Chromium made them unnecessary for now.
-- **Frame accuracy** is currently bounded by `<video>` seeking; a WebCodecs
-  `VideoDecoder` frame source is the planned refinement, and slots in behind the
-  same `FrameSource` interface with no engine change.
+- **Frame accuracy** comes from decoding source video with WebCodecs
+  (via `mediabunny`) rather than seeking a `<video>` element. Seeking was both
+  approximate — a slow seek could capture the _previous_ frame — and slow, since
+  every frame re-decoded from a keyframe. The efficient decode path needs all the
+  wanted timestamps up front (it only emits a frame once it knows the next one, so
+  a lazy feed deadlocks), so `planVideoDecodeSchedule` walks the export's frame
+  range first and records, per video, the source timestamps in request order.
+  Both the schedule and the render loop derive from `resolveScene`, which is what
+  keeps them in lockstep. Decoded frames reach the compositor through a
+  canvas-backed texture in `MediaTextureCache`, so the renderer is unchanged.
+  Media the decoder can't open falls back to element seeking.
 
 ## Transitions
 

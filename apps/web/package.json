@@ -29,6 +29,7 @@
     "@huggingface/transformers": "^4.2.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.25.0",
+    "mediabunny": "^1.55.1",
     "mp4-muxer": "^5.2.2",
     "next": "16.2.10",
     "pixi.js": "^8.19.0",

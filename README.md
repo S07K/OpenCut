@@ -9,8 +9,8 @@ Effects, the UX of Figma, and the openness of Blender.
 > **Status: in active development.** The full editing loop works — import,
 > multi-track timeline, WebGL preview, playback, undo/redo, masking, captions,
 > **on-device Whisper transcription**, color, effects, chroma key, transitions,
-> and **export to MP4/WebM with audio**. What's next is depth: frame-exact
-> WebCodecs export and the plugin SDK. See [Roadmap](#roadmap).
+> and **frame-exact export to MP4/WebM with audio**. What's next is the plugin
+> SDK. See [Roadmap](#roadmap).
 
 ## Quick start
 
@@ -107,9 +107,10 @@ Vitest
 
 - [x] **Phase 7** — On-device Whisper transcription (transformers.js, WebGPU/WASM)
 
+- [x] **Phase 8** — Frame-exact export (WebCodecs decoding, not `<video>` seeking)
+
 Next up:
 
-- [ ] Frame-exact video export via a WebCodecs `VideoDecoder` source
 - [ ] The `plugin-sdk` package — a frozen, versioned re-export for third parties
 - [ ] More effects and transitions; documentation and performance passes
 

@@ -26,7 +26,20 @@ interface ImageEntry {
   objectUrl: string;
 }
 
-type CacheEntry = VideoEntry | ImageEntry;
+/**
+ * A video whose frames arrive from an external decoder instead of a `<video>`
+ * element. Export uses this so it can draw exactly-decoded frames through the
+ * same texture lookup the preview uses — the renderer never learns the
+ * difference.
+ */
+interface CanvasVideoEntry {
+  kind: "canvas-video";
+  canvas: HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
+  texture: Texture;
+}
+
+type CacheEntry = VideoEntry | ImageEntry | CanvasVideoEntry;
 
 export class MediaTextureCache {
   private readonly entries = new Map<Id, CacheEntry>();
@@ -43,6 +56,50 @@ export class MediaTextureCache {
   getVideoElement(mediaId: Id): HTMLVideoElement | null {
     const entry = this.entries.get(mediaId);
     return entry?.kind === "video" ? entry.element : null;
+  }
+
+  /**
+   * Registers a video whose frames come from a decoder rather than a `<video>`
+   * element, and returns its texture. Subsequent `load` calls for this id are
+   * no-ops, so no element is created for media the caller decodes itself.
+   *
+   * Call {@link drawDecodedFrame} to publish each new frame.
+   */
+  registerDecodedVideo(mediaId: Id, width: number, height: number): Texture | null {
+    const existing = this.entries.get(mediaId);
+    if (existing) return existing.texture;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, width);
+    canvas.height = Math.max(1, height);
+    // `alpha` keeps transparent video transparent; without it the canvas would
+    // composite every frame onto opaque black.
+    const context = canvas.getContext("2d", { alpha: true });
+    if (!context) return null;
+
+    const texture = Texture.from(canvas);
+    this.entries.set(mediaId, { kind: "canvas-video", canvas, context, texture });
+    return texture;
+  }
+
+  /**
+   * Publishes a decoded frame as the current contents of a registered video.
+   *
+   * The frame is copied into the entry's own canvas rather than swapped in, so
+   * the texture identity stays stable across frames (Pixi would otherwise have
+   * to rebuild the GPU resource) and the decoder stays free to recycle its
+   * canvases. The texture is then marked dirty so the next draw re-uploads it.
+   */
+  drawDecodedFrame(mediaId: Id, frame: CanvasImageSource): void {
+    const entry = this.entries.get(mediaId);
+    if (entry?.kind !== "canvas-video") return;
+
+    const { canvas, context, texture } = entry;
+    // Clear first: a frame with transparency must not show the previous one
+    // through its transparent regions.
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(frame, 0, 0, canvas.width, canvas.height);
+    texture.source.update();
   }
 
   /**
@@ -118,12 +175,15 @@ export class MediaTextureCache {
     if (!entry) return;
 
     entry.texture.destroy(true);
-    URL.revokeObjectURL(entry.objectUrl);
     if (entry.kind === "video") {
+      URL.revokeObjectURL(entry.objectUrl);
       entry.element.pause();
       entry.element.removeAttribute("src");
       entry.element.load();
+    } else if (entry.kind === "image") {
+      URL.revokeObjectURL(entry.objectUrl);
     }
+    // A decoded-video entry owns only its canvas, which the texture just freed.
 
     this.entries.delete(mediaId);
   }
