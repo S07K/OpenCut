@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Captions as CaptionsIcon, Loader2, Plus, Trash2 } from "lucide-react";
 import type { CaptionTrackData, CaptionWord, Frame } from "@cutaway/types";
 import {
@@ -14,7 +14,8 @@ import { Button, cn } from "@cutaway/ui";
 import { useShallow } from "zustand/react/shallow";
 import { useEditorStore } from "@/state/editorStore";
 import { useMediaImportContext } from "@/features/media/MediaImportProvider";
-import { getTranscriptionProvider } from "./transcription";
+import { getTranscriptionProvider, setTranscriptionProvider } from "./transcription";
+import { WhisperTranscriptionProvider } from "./WhisperTranscriptionProvider";
 import { CaptionEditor } from "./CaptionEditor";
 import type { EditorUpdateCaptionTrack } from "./types";
 
@@ -44,6 +45,13 @@ export function CaptionsPanel() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+
+  // Promote real on-device Whisper over the placeholder once we're in the
+  // browser (it needs Worker + WebAudio). The stub stays as the fallback.
+  useEffect(() => {
+    const whisper = new WhisperTranscriptionProvider();
+    if (whisper.isAvailable()) setTranscriptionProvider(whisper);
+  }, []);
 
   // Generate from the first media asset that has audio — the common single-clip
   // case. Picking the source explicitly is a refinement for multi-clip projects.
@@ -177,8 +185,8 @@ export function CaptionsPanel() {
                 )}
               </Button>
               <p className="text-text-tertiary text-2xs max-w-[220px]">
-                Uses on-device transcription. The default build ships a placeholder recogniser —
-                edit the words, or plug in Whisper.
+                On-device Whisper — nothing leaves your machine. The first run downloads the model
+                (~150&nbsp;MB) and caches it; later runs are quick.
               </p>
             </>
           ) : (

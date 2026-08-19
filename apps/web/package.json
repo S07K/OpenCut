@@ -26,6 +26,7 @@
     "@cutaway/types": "workspace:*",
     "@cutaway/ui": "workspace:*",
     "@cutaway/utils": "workspace:*",
+    "@huggingface/transformers": "^4.2.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.25.0",
     "mp4-muxer": "^5.2.2",

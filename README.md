@@ -8,9 +8,9 @@ Effects, the UX of Figma, and the openness of Blender.
 
 > **Status: in active development.** The full editing loop works — import,
 > multi-track timeline, WebGL preview, playback, undo/redo, masking, captions,
-> color, effects, transitions, and **export to MP4/WebM with audio**. What's
-> next is depth: real on-device transcription, chroma key, and the plugin SDK.
-> See [Roadmap](#roadmap).
+> **on-device Whisper transcription**, color, effects, chroma key, transitions,
+> and **export to MP4/WebM with audio**. What's next is depth: frame-exact
+> WebCodecs export and the plugin SDK. See [Roadmap](#roadmap).
 
 ## Quick start
 
@@ -41,8 +41,10 @@ keys. Your footage never leaves your machine.
 - **Captions** — type a caption and it drops onto the timeline as a styled,
   animated block (TikTok / Hormozi / MrBeast / Instagram / Ali Abdaal styles,
   with word-by-word highlighting). Blocks are draggable, snap, and trim on the
-  timeline so you can sync them to the audio. Auto-transcription runs behind a
-  swappable provider interface (local Whisper drops in without touching callers).
+  timeline so you can sync them to the audio. Auto-transcription runs on-device
+  with Whisper (transformers.js — WebGPU when available, WASM otherwise) behind a
+  swappable provider interface, so nothing leaves your machine and no account or
+  API key is ever required.
 - **Color & effects** — color grading (exposure, contrast, saturation, and more)
   with look presets, plus an open-world effects registry (Gaussian blur, noise,
   and anything a plugin adds).
@@ -103,10 +105,10 @@ Vitest
 - [x] **Phase 5** — Color grading, aspect ratios, effects, transitions
 - [x] **Phase 6** — Export engine (WebCodecs + muxers, video + audio + range)
 
+- [x] **Phase 7** — On-device Whisper transcription (transformers.js, WebGPU/WASM)
+
 Next up:
 
-- [ ] Real on-device transcription (WASM Whisper, WebGPU-accelerated when available)
-- [ ] Chroma key / background removal
 - [ ] Frame-exact video export via a WebCodecs `VideoDecoder` source
 - [ ] The `plugin-sdk` package — a frozen, versioned re-export for third parties
 - [ ] More effects and transitions; documentation and performance passes
